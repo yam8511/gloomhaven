@@ -212,6 +212,6 @@ public:
         /**
          * 讀取怪物設定檔
          */
-        this->loadMonster(monsterFile);
+        // this->loadMonster(monsterFile);
     };
 };
