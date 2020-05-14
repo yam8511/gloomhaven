@@ -1,0 +1,13 @@
+project.exe:
+	g++ -o project.exe ./src/main.cpp
+
+run: project.exe
+	./project.exe character1.txt monster1.txt 1
+
+dev:
+	g++ -o project.exe ./src/main.cpp
+	./project.exe character1.txt monster1.txt 1
+
+clean:
+	rm *.o || exit 0
+	rm *.exe || exit 0
