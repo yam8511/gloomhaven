@@ -1,6 +1,6 @@
 #include <string>
 #include <vector> // std::vector, std::slice
-#include "monster_skill.h"
+#include "monster_skill.cpp"
 using namespace std;
 
 // 角色

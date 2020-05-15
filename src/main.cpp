@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include "gloomhaven.h"
+#include "gloomhaven.cpp"
 using namespace std;
 
 int main(int argc, char const *argv[])
