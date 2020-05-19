@@ -3,7 +3,7 @@
 #include <vector>
 using namespace std;
 
-// 角色技能卡資訊
+// 怪物技能卡資訊
 class MonsterSkill
 {
 private:
@@ -24,10 +24,10 @@ public:
         cout << "-------------------" << endl;
         printf("敏捷: %d, ", this->agile);
         if (this->reset)
-            cout << "有重洗標誌, " << ends;
+            cout << "有重洗標誌, " << endl;
         else
-            cout << "沒重洗標誌, " << ends;
-        cout << "動作: " << endl;
+            cout << "沒重洗標誌, " << endl;
+        cout << "動作: " << ends;
         for (int i = 0; i < this->actions.size(); i++)
         {
             string action = this->actions[i];

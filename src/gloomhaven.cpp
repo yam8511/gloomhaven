@@ -3,16 +3,20 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <map>
+#include "util.cpp"
 #include "character.cpp"
 #include "monster.cpp"
-#include "util.cpp"
+#include "map_data.cpp"
 using namespace std;
 
-// 角色
+// 遊戲
 class Gloomhaven
 {
 private:
-    vector<Character> players; // 角色資料
+    map<string, Character> players; // 角色資料
+    map<string, Monster> monsters;  // 怪物資料
+    MapData mapData;                // 地圖
     bool debugMode;
 
     void setDebugMode(bool mode)
@@ -78,7 +82,7 @@ private:
             if (this->debugMode)
                 player.ShowMe();
 
-            this->players.push_back(player);
+            this->players[name] = player;
         }
         in.close(); // 關閉檔案
     }
@@ -95,7 +99,7 @@ private:
         string name;                                      // 字串變數
         int normalBlood, normalAttack, normalAttackRange; // 普通等級之血量、攻擊傷害、射程
         int greatBlood, greatAttack, greatAttackRange;    // 菁英等級之血量、攻擊傷害、射程
-        int agile;                                        // 數值變數
+        vector<string> ss;
         char buffer[200];
 
         in.getline(buffer, sizeof(buffer)); // 讀取怪物數量
@@ -104,7 +108,7 @@ private:
         for (int i = 0; i < num; i++)
         {
             in.getline(buffer, sizeof(buffer)); // 讀取怪物基本資訊
-            vector<string> ss = split(buffer, " ");
+            ss = split(buffer, " ");
 
             name = ss[0];                    // 怪物名字
             normalBlood = stoi(ss[1]);       // 普通等級之血量
@@ -113,11 +117,30 @@ private:
             greatBlood = stoi(ss[4]);        // 菁英等級之血量
             greatAttack = stoi(ss[5]);       // 菁英等級之攻擊傷害
             greatAttackRange = stoi(ss[6]);  // 菁英等級之射程
-            Monster monster(name, normalBlood, normalAttack, normalAttackRange,
-                            greatBlood, greatAttack, greatAttackRange);
+            Monster monster = Monster(name, normalBlood, normalAttack, normalAttackRange,
+                                      greatBlood, greatAttack, greatAttackRange);
 
-            // Character player = Character(name, blood, initCardNum);
-            // this->players.push_back(player);
+            for (int j = 0; j < 6; j++)
+            {
+                int agile;  // 數值變數
+                bool reset; // 重洗標誌
+                vector<string> actions;
+
+                in.getline(buffer, sizeof(buffer)); // 讀取怪物基本資訊
+                ss = split(buffer, " ");
+                int lastIndex = ss.size() - 1;
+                agile = stoi(ss[2]);
+                reset = ss[lastIndex] == "r";
+                for (int k = 3; k < lastIndex; k++)
+                    actions.push_back(ss[k]);
+
+                monster.AddSkill(agile, actions, reset);
+            }
+
+            if (this->debugMode)
+                monster.ShowMe();
+
+            this->monsters.insert(pair<string, Monster>(name, monster));
         }
         in.close(); // 關閉檔案
     }
@@ -127,7 +150,8 @@ public:
     {
         // Debug模式
         this->setDebugMode(debug);
-        this->players = vector<Character>();
+        this->players = map<string, Character>();
+        this->monsters = map<string, Monster>();
 
         /**
          * 讀取角色設定檔
@@ -137,6 +161,168 @@ public:
         /**
          * 讀取怪物設定檔
          */
-        // this->loadMonster(monsterFile);
+        this->loadMonster(monsterFile);
     };
+
+    void Run()
+    {
+        char buffer[200];
+        string tmp;
+        int num;
+
+    SELECT_PLAY_NUM:
+        cout << "玩家輸入角色數量 (2~4)" << endl;
+        tmp = getInputLine();
+        try
+        {
+            num = stoi(tmp);
+        }
+        catch (const std::exception &e)
+        {
+            num = 0;
+        }
+        if (num < 2 || num > 4)
+            goto SELECT_PLAY_NUM;
+
+        for (int i = 0; i < num; i++)
+        {
+        RESET:
+            printf("玩家#%d : 請決定出場角色與要攜帶的技能卡\n", i + 1);
+
+            vector<string> ss = getInputLineSplit();
+            if (ss.size() == 0)
+                goto RESET;
+
+            string name = ss[0];
+            if (this->players.find(name) == this->players.end())
+            {
+                cout << "角色找不到: " << name << endl;
+                goto RESET; // 表示找不到
+            }
+
+            Character player = this->players[name];
+            if (player.InitCardNum() != ss.size() - 1)
+            {
+                cout << "該角色的初始牌數為: " << player.InitCardNum() << endl;
+                goto RESET;
+            }
+
+            for (int j = 1; j < ss.size(); j++)
+            {
+                try
+                {
+                    int index = stoi(ss[j]);
+                    CharacterSkill *card = player.GetCard(index);
+                    if (card == NULL)
+                    {
+                        cout << "牌組技能找不到: " << index << endl;
+                        goto RESET;
+                    }
+                }
+                catch (const std::exception &e)
+                {
+                    goto RESET;
+                }
+            }
+        }
+
+    SELECT_MAP:
+        cout << "玩家輸入地圖名稱" << endl;
+        tmp = getInputLine();
+        fstream in(tmp);
+        if (!in)
+        {
+            cout << "讀取地圖設定檔失敗" << endl;
+            goto SELECT_MAP;
+        }
+
+        in.getline(buffer, sizeof(buffer)); // 讀取地圖大小
+        vector<string> ss = split(buffer, " ");
+        if (ss.size() != 2)
+        {
+            cout << "讀取地圖大小格式錯誤(請輸入 m n): " << string(buffer) << endl;
+            in.close();
+            goto SELECT_MAP;
+        }
+
+        int m, n;
+        try
+        {
+            m = stoi(ss[0]);
+            n = stoi(ss[1]);
+        }
+        catch (const std::exception &e)
+        {
+            cout << "讀取地圖大小格式錯誤(請輸入數字): " << string(buffer) << endl;
+            in.close();
+            goto SELECT_MAP;
+        }
+
+        this->mapData = MapData(m, n);
+
+        vector<vector<MapObject>> layout;
+        for (int i = 0; i < m; i++) // 讀取地圖配置
+        {
+            in.getline(buffer, sizeof(buffer));
+            string ss = string(buffer);
+            if (ss.size() != n)
+            {
+                cout << "讀取地圖配置錯誤(不符合地圖大小): " << string(buffer) << endl;
+                in.close();
+                goto SELECT_MAP;
+            }
+
+            vector<MapObject> objs;
+            for (int j = 0; j < n; j++)
+            {
+                MapObject x = parseMapObject(ss[j]);
+                if (x == None)
+                {
+                    cout << "讀取地圖配置錯誤(地圖編號有錯): " << ss[j] << endl;
+                    in.close();
+                    goto SELECT_MAP;
+                }
+                objs.push_back(x);
+            }
+
+            layout.push_back(objs);
+        }
+
+        this->mapData.SetLayout(layout);
+
+        in.getline(buffer, sizeof(buffer)); // 讀取初始選擇位子
+        ss = split(buffer, " ");
+        if (ss.size() % 2 != 0)
+        {
+            cout << "讀取地圖配置錯誤(初始位置格式錯誤): " << string(buffer) << endl;
+            in.close();
+            goto SELECT_MAP;
+        }
+
+        vector<Point2d> poss;
+        for (int i = 0; i < ss.size(); i += 2)
+        {
+            try
+            {
+                int x = stoi(ss[i]);
+                int y = stoi(ss[i + 1]);
+                Point2d p = Point2d(x, y);
+                if (this->debugMode)
+                    p.ShowMe();
+                poss.push_back(p);
+            }
+            catch (const std::exception &e)
+            {
+                cout << "讀取地圖配置錯誤(初始位置不是數字): " << string(buffer) << endl;
+                in.close();
+                goto SELECT_MAP;
+            }
+        }
+        this->mapData.SetPlayerInitPos(poss);
+
+        if (this->debugMode)
+            this->mapData.ShowMe();
+
+        in.close();
+    }
 };

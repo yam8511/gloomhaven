@@ -13,7 +13,7 @@ private:
     vector<CharacterSkill> skills; // 技能總表
 
 public:
-    Character(string name, int blood, int initCardNum)
+    Character(string name = "", int blood = 0, int initCardNum = 0)
     {
         this->name = name;
         this->blood = blood;
@@ -25,6 +25,15 @@ public:
     {
         this->skills.push_back(CharacterSkill(agile, upActions, downActions));
     };
+
+    int InitCardNum() { return this->initCardNum; }
+
+    CharacterSkill *GetCard(int i)
+    {
+        if (i < this->skills.size())
+            return &this->skills[i];
+        return NULL;
+    }
 
     void ShowMe()
     {

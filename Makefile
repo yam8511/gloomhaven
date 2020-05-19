@@ -1,11 +1,11 @@
 project.exe:
-	g++ -o project.exe ./src/main.cpp
+	g++ -std=c++11 -o project.exe ./src/main.cpp
 
 run: project.exe
-	./project.exe character1.txt monster1.txt 1
+	./project.exe character1.txt monster1.txt 0
 
 dev:
-	g++ -o project.exe ./src/main.cpp
+	g++ -std=c++11 -o project.exe ./src/main.cpp
 	./project.exe character1.txt monster1.txt 1
 
 clean:

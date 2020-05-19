@@ -1,21 +1,20 @@
 #include <string>
-#include <vector> // std::vector, std::slice
+#include <vector>
 #include "monster_skill.cpp"
 using namespace std;
 
-// 角色
+// 怪物
 class Monster
 {
 private:
-    // 包含怪物名稱、、
     string name;                                      // 名字
     int normalBlood, normalAttack, normalAttackRange; // 普通等級之血量、普通等級之攻擊傷害、普通等級之射程
     int greatBlood, greatAttack, greatAttackRange;    // 菁英等級之血量、菁英等級之攻擊傷害、菁英等級之射程
     vector<MonsterSkill> skills;                      // 技能總表
 
 public:
-    Monster(string name, int normalBlood, int normalAttack, int normalAttackRange,
-            int greatBlood, int greatAttack, int greatAttackRange)
+    Monster(string name = "", int normalBlood = 0, int normalAttack = 0, int normalAttackRange = 0,
+            int greatBlood = 0, int greatAttack = 0, int greatAttackRange = 0)
     {
         this->name = name;
         this->normalBlood = normalBlood;
