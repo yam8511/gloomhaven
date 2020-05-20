@@ -16,7 +16,14 @@ class Gloomhaven
 private:
     map<string, Character> players; // 角色資料
     map<string, Monster> monsters;  // 怪物資料
-    MapData mapData;                // 地圖
+
+    MapData mapData;                   // 地圖
+    vector<Character> selectedPlayers; // 選中角色
+    int selectedPlayerNum;             // 選擇角色數量
+    vector<Monster> selectedMonsters;  // 選中怪物
+    int selectedMonsterNum;            // 選擇怪物數量
+    vector<int> eachMonsterLevel;      // 每一隻怪物的等級
+
     bool debugMode;
 
     void setDebugMode(bool mode)
@@ -153,7 +160,7 @@ public:
         this->players = map<string, Character>();
         this->monsters = map<string, Monster>();
 
-        /**
+        /*
          * 讀取角色設定檔
          */
         this->loadCharacter(characterFile);
@@ -184,6 +191,8 @@ public:
         if (num < 2 || num > 4)
             goto SELECT_PLAY_NUM;
 
+        this->selectedPlayerNum = num;
+        this->selectedPlayers = vector<Character>();
         for (int i = 0; i < num; i++)
         {
         RESET:
@@ -224,6 +233,7 @@ public:
                     goto RESET;
                 }
             }
+            this->selectedPlayers.push_back(player);
         }
 
     SELECT_MAP:
@@ -320,9 +330,85 @@ public:
         }
         this->mapData.SetPlayerInitPos(poss);
 
+        in.getline(buffer, sizeof(buffer)); // 讀取怪物數量
+        try
+        {
+            num = stoi(buffer);
+            this->selectedMonsterNum = num;
+            this->selectedMonsters = vector<Monster>();
+            this->eachMonsterLevel = vector<int>();
+        }
+        catch (const std::exception &e)
+        {
+            cout << "讀取地圖配置錯誤(怪物數量不是數字): " << string(buffer) << endl;
+            in.close();
+            goto SELECT_MAP;
+        }
+
+        vector<Point2d> mops;
+        for (int i = 0; i < this->selectedMonsterNum; i++)
+        {
+            in.getline(buffer, sizeof(buffer)); // 讀取怪物數量配置
+            ss = split(buffer, " ");
+            if (ss.size() != 6)
+            {
+                cout << "讀取地圖配置錯誤(怪物資訊格式錯誤): " << string(buffer) << endl;
+                in.close();
+                goto SELECT_MAP;
+            }
+
+            string name = ss[0];
+            int x, y;
+
+            if (this->monsters.find(name) == this->monsters.end())
+            {
+                cout << "讀取地圖配置錯誤(怪物找不到): " << name << endl;
+                in.close();
+                goto SELECT_MAP;
+            }
+
+            try
+            {
+                x = stoi(ss[1]);
+                y = stoi(ss[2]);
+            }
+            catch (const std::exception &e)
+            {
+                cout << "讀取地圖配置錯誤(怪物座標錯誤): (" << ss[1] << "," << ss[2] << ")" << endl;
+                in.close();
+                goto SELECT_MAP;
+            }
+
+            try
+            {
+                num = stoi(ss[this->selectedPlayerNum + 1]);
+            }
+            catch (const std::exception &e)
+            {
+                cout << "讀取地圖配置錯誤(怪物數量非數字): " << ss[this->selectedPlayerNum + 1] << endl;
+                in.close();
+                goto SELECT_MAP;
+            }
+
+            Monster monster = this->monsters[name];
+            this->selectedMonsters.push_back(monster);
+            mops.push_back(Point2d(x, y));
+            this->eachMonsterLevel.push_back(num);
+        }
+        this->mapData.SetMonstersPos(mops);
+
         if (this->debugMode)
             this->mapData.ShowMe();
 
         in.close();
+
+        // 開始選擇開場位子
+        // for (int i = 0; i < this->selectedPlayerNum; i++)
+        // {
+        //     while (true)
+        //     {
+        //         string line = getInputLine();
+        //     }
+        // }
     }
 };

@@ -8,7 +8,7 @@ class Point2d
 private:
     int posX, posY; // X,Y座標
 public:
-    Point2d(int x, int y)
+    Point2d(int x = 0, int y = 0)
     {
         this->posX = x;
         this->posY = y;

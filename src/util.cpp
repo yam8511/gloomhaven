@@ -58,7 +58,7 @@ char showMapObject(MapObject x)
     if (x == SelectedPos) // 已選位子
         return SelectedPos;
 
-    return '!';
+    return x;
 }
 
 // 移動類型
