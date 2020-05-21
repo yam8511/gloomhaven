@@ -40,6 +40,52 @@ public:
     void SetMonstersPos(vector<Point2d> mops) { this->monsterPos = mops; }
     void SetPlayersPos(vector<Point2d> poss) { this->playerPos = poss; }
 
+    // 移動玩家初始位子
+    bool MovePlayerInitPos(char action)
+    {
+        if (action == 'e') // 確定位子
+        {
+            // TODO: 更新地圖
+            // 加入角色位子
+            // 調整指標位子
+            return true;
+        }
+
+        Point2d nextPos;
+        if (action == 'w') // 上
+        {
+            nextPos = Point2d(this->cursorPos.X(), this->cursorPos.Y() - 1);
+        }
+        else if (action = 's') // 下
+        {
+            nextPos = Point2d(this->cursorPos.X(), this->cursorPos.Y() + 1);
+        }
+        else if (action == 'a') // 左
+        {
+            nextPos = Point2d(this->cursorPos.X() - 1, this->cursorPos.Y());
+        }
+        else if (action == 'd') // 右
+        {
+            nextPos = Point2d(this->cursorPos.X() + 1, this->cursorPos.Y());
+        }
+
+        // 超過邊界則不移動
+        if (nextPos.X() < 0 || nextPos.Y() < 0 || nextPos.X() >= this->width || nextPos.Y() >= this->height)
+            return;
+
+        for (int i = 0; i < this->initPos.size(); i++)
+        {
+            if (this->initPos[i].X() == nextPos.X() && this->initPos[i].Y() == nextPos.Y())
+            {
+                this->initPos.erase(this->initPos.begin() + i);
+                this->cursorPos = nextPos;
+                break;
+            }
+        }
+
+        return false;
+    }
+
     Point2d GetCursorPos() { return this->cursorPos; }
 
     void ShowMe()

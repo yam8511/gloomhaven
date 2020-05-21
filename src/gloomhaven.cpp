@@ -403,12 +403,19 @@ public:
         in.close();
 
         // 開始選擇開場位子
-        // for (int i = 0; i < this->selectedPlayerNum; i++)
-        // {
-        //     while (true)
-        //     {
-        //         string line = getInputLine();
-        //     }
-        // }
+        for (int i = 0; i < this->selectedPlayerNum; i++)
+        {
+            bool interrupt;
+            while (!interrupt)
+            {
+                string line = getInputLine();
+                for (int j = 0; j < line.size(); j++)
+                {
+                    interrupt = this->mapData.MovePlayerInitPos(line[j]);
+                    if (interrupt)
+                        break;
+                }
+            }
+        }
     }
 };
