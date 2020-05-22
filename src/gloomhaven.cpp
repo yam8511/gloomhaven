@@ -405,17 +405,21 @@ public:
         // 開始選擇開場位子
         for (int i = 0; i < this->selectedPlayerNum; i++)
         {
-            bool interrupt;
+            bool interrupt = false;
+            cout << "玩家" << i + 1 << ": 選擇開場位子" << endl;
             while (!interrupt)
             {
                 string line = getInputLine();
                 for (int j = 0; j < line.size(); j++)
                 {
                     interrupt = this->mapData.MovePlayerInitPos(line[j]);
+                    this->mapData.ShowMe();
                     if (interrupt)
                         break;
                 }
             }
         }
+        this->mapData.FinishInitState();
+        this->mapData.ShowMe();
     }
 };

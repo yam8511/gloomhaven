@@ -16,5 +16,6 @@ public:
 
     int X() { return this->posX; }
     int Y() { return this->posY; }
+    bool Equal(Point2d p) { return p.posX == this->posX && p.posY == this->posY; }
     void ShowMe() { printf("座標: (%d, %d)\n", this->posX, this->posY); }
 };

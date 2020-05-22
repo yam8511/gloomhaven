@@ -14,27 +14,39 @@ private:
     Point2d cursorPos;                // 指標位子
     vector<Point2d> playerPos;        // 角色位子
     vector<Point2d> monsterPos;       // 怪物位子
+    bool initState;                   // 選擇位子階段
 
 public:
     MapData(int m = 0, int n = 0)
     {
         this->height = m;
         this->width = n;
+        this->initState = true;
     };
 
-    void SetLayout(vector<vector<MapObject>> layout) { this->layout = layout; }
-    void SetPlayerInitPos(vector<Point2d> poss)
+    void refreshInitCursorPos()
     {
-        this->initPos = poss;
         Point2d cursorPos(this->width - 1, this->height - 1);
-        for (int i = 0; i < poss.size(); i++)
+        for (int i = 0; i < this->initPos.size(); i++)
         {
-            Point2d p = poss[i];
+            Point2d p = this->initPos[i];
             if (p.Y() < cursorPos.Y() ||
                 (p.Y() == cursorPos.Y() && p.X() < cursorPos.X()))
                 cursorPos = p;
         }
         this->cursorPos = cursorPos;
+    }
+    void FinishInitState()
+    {
+        this->initState = false;
+        if (this->playerPos.size() > 0)
+            this->cursorPos = this->playerPos[0];
+    }
+    void SetLayout(vector<vector<MapObject>> layout) { this->layout = layout; }
+    void SetPlayerInitPos(vector<Point2d> poss)
+    {
+        this->initPos = poss;
+        this->refreshInitCursorPos();
     }
     void SetCursorPos(Point2d pos) { this->cursorPos = pos; }
     void SetMonstersPos(vector<Point2d> mops) { this->monsterPos = mops; }
@@ -45,9 +57,28 @@ public:
     {
         if (action == 'e') // 確定位子
         {
-            // TODO: 更新地圖
-            // 加入角色位子
-            // 調整指標位子
+            int currentIndex = -1;
+            for (int i = 0; i < this->initPos.size(); i++)
+            {
+                if (this->cursorPos.Equal(this->initPos[i]))
+                {
+                    currentIndex = i;
+                    break;
+                }
+            }
+
+            if (currentIndex < 0)
+                return false;
+
+            this->initPos.erase(this->initPos.begin() + currentIndex); // 從可選位子中刪除
+            this->playerPos.push_back(this->cursorPos);                // 加入角色位子
+
+            int len = this->initPos.size();
+            if (len > 0) // 如果還有可選位子，調整預設位子為剩下的位子
+                this->refreshInitCursorPos();
+            else
+                this->cursorPos = this->playerPos[0];
+
             return true;
         }
 
@@ -56,7 +87,7 @@ public:
         {
             nextPos = Point2d(this->cursorPos.X(), this->cursorPos.Y() - 1);
         }
-        else if (action = 's') // 下
+        else if (action == 's') // 下
         {
             nextPos = Point2d(this->cursorPos.X(), this->cursorPos.Y() + 1);
         }
@@ -71,13 +102,12 @@ public:
 
         // 超過邊界則不移動
         if (nextPos.X() < 0 || nextPos.Y() < 0 || nextPos.X() >= this->width || nextPos.Y() >= this->height)
-            return;
+            return false;
 
         for (int i = 0; i < this->initPos.size(); i++)
         {
-            if (this->initPos[i].X() == nextPos.X() && this->initPos[i].Y() == nextPos.Y())
+            if (nextPos.Equal(this->initPos[i]))
             {
-                this->initPos.erase(this->initPos.begin() + i);
                 this->cursorPos = nextPos;
                 break;
             }
@@ -101,13 +131,16 @@ public:
             showData.push_back(tmp);
         }
 
-        for (int i = 0; i < this->initPos.size(); i++)
+        if (this->initState)
         {
-            Point2d p = this->initPos[i];
-            showData[p.Y()][p.X()] = AvailablePos;
-        }
+            for (int i = 0; i < this->initPos.size(); i++)
+            {
+                Point2d p = this->initPos[i];
+                showData[p.Y()][p.X()] = AvailablePos;
+            }
 
-        showData[this->cursorPos.Y()][this->cursorPos.X()] = SelectedPos;
+            showData[this->cursorPos.Y()][this->cursorPos.X()] = SelectedPos;
+        }
 
         char a = 'a';
         for (int i = 0; i < this->monsterPos.size(); i++)
