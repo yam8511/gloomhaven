@@ -21,13 +21,20 @@ int main(int argc, char const *argv[])
     while (true)
     {
         cout << "輸入play來開始遊戲，或輸入exit來結束遊戲" << endl;
-        tmp = getInputLine();
+        if (debugModel)
+            tmp = "play";
+        else
+            tmp = getInputLine();
+
         if (tmp == "play")
         {
             Gloomhaven game(characterFile, monsterFile, debugModel);
             game.Run();
         }
         else if (tmp == "exit")
+            exit(0);
+
+        if (debugModel)
             exit(0);
     }
 

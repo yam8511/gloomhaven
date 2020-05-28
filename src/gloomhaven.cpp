@@ -179,17 +179,24 @@ public:
 
     SELECT_PLAY_NUM:
         cout << "玩家輸入角色數量 (2~4)" << endl;
-        tmp = getInputLine();
-        try
+        if (this->debugMode)
         {
-            num = stoi(tmp);
+            num = 2;
         }
-        catch (const std::exception &e)
+        else
         {
-            num = 0;
+            tmp = getInputLine();
+            try
+            {
+                num = stoi(tmp);
+            }
+            catch (const std::exception &e)
+            {
+                num = 0;
+            }
+            if (num < 2 || num > 4)
+                goto SELECT_PLAY_NUM;
         }
-        if (num < 2 || num > 4)
-            goto SELECT_PLAY_NUM;
 
         this->selectedPlayerNum = num;
         this->selectedPlayers = vector<Character>();
@@ -198,7 +205,22 @@ public:
         RESET:
             printf("玩家#%d : 請決定出場角色與要攜帶的技能卡\n", i + 1);
 
-            vector<string> ss = getInputLineSplit();
+            vector<string> ss;
+            if (this->debugMode)
+            {
+                ss.push_back("brute");
+                ss.push_back("1");
+                ss.push_back("2");
+                ss.push_back("3");
+                ss.push_back("4");
+                ss.push_back("5");
+                ss.push_back("6");
+            }
+            else
+            {
+                ss = getInputLineSplit();
+            }
+
             if (ss.size() == 0)
                 goto RESET;
 
@@ -238,7 +260,10 @@ public:
 
     SELECT_MAP:
         cout << "玩家輸入地圖名稱" << endl;
-        tmp = getInputLine();
+        if (this->debugMode)
+            tmp = "map1.txt";
+        else
+            tmp = getInputLine();
         fstream in(tmp);
         if (!in)
         {
@@ -421,5 +446,14 @@ public:
         }
         this->mapData.FinishInitState();
         this->mapData.ShowMe();
+
+        cout << "------------------" << endl;
+
+        this->mapData.ShowMap();
+
+        bool gameOver;
+        while (!gameOver)
+        {
+        }
     }
 };

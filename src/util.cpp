@@ -16,13 +16,16 @@ enum class MonsterAppear
 
 // 地圖障礙類型
 typedef char MapObject;
-const MapObject None = '-';         // 無
-const MapObject Wall = '0';         // 牆壁
-const MapObject Floor = '1';        // 地板
-const MapObject Stuck = '2';        // 障礙物
-const MapObject Door = '3';         // 門
-const MapObject AvailablePos = '_'; // 可選位子
-const MapObject SelectedPos = '*';  // 已選位子
+const MapObject None = '-';            // 無
+const MapObject Wall = '0';            // 牆壁
+const MapObject Floor = '1';           // 地板
+const MapObject Stuck = '2';           // 障礙物
+const MapObject Door = '3';            // 門
+const MapObject PlayerObject = '!';    // 玩家的位子
+const MapObject MonsterObject = '@';   // 怪物的位子
+const MapObject DisableObject = '#';   // 關閉的位子
+const MapObject AvailableObject = '_'; // 可選位子
+const MapObject SelectedObject = '*';  // 已選位子
 
 MapObject parseMapObject(char x)
 {
@@ -52,11 +55,14 @@ char showMapObject(MapObject x)
     if (x == Door) // 門
         return Door;
 
-    if (x == AvailablePos) // 可選位子
-        return AvailablePos;
+    if (x == DisableObject) // 關閉的位子
+        return ' ';
 
-    if (x == SelectedPos) // 已選位子
-        return SelectedPos;
+    if (x == AvailableObject) // 可選位子
+        return AvailableObject;
+
+    if (x == SelectedObject) // 已選位子
+        return SelectedObject;
 
     return x;
 }
