@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <random>
+#include <algorithm>
 #include "util.cpp"
 #include "character.cpp"
 #include "monster.cpp"
@@ -17,12 +19,12 @@ private:
     map<string, Character> players; // 角色資料
     map<string, Monster> monsters;  // 怪物資料
 
-    MapData mapData;                   // 地圖
-    vector<Character> selectedPlayers; // 選中角色
-    int selectedPlayerNum;             // 選擇角色數量
-    vector<Monster> selectedMonsters;  // 選中怪物
-    int selectedMonsterNum;            // 選擇怪物數量
-    vector<int> eachMonsterLevel;      // 每一隻怪物的等級
+    MapData mapData;                        // 地圖
+    vector<Character> selectedPlayers;      // 選中角色
+    int selectedPlayerNum;                  // 選擇角色數量
+    vector<Monster> selectedMonsters;       // 選中怪物
+    int selectedMonsterNum;                 // 選擇怪物數量
+    vector<MonsterAppear> eachMonsterLevel; // 每一隻怪物的等級
 
     bool debugMode;
 
@@ -31,7 +33,7 @@ private:
         this->debugMode = mode;
     }
 
-    void loadCharacter(string characterFile)
+    void loadCharacter(string characterFile) // 載入角色資料
     {
         /**
          * 讀取角色設定檔
@@ -40,9 +42,9 @@ private:
         if (!in)
             PrintAndExit("讀取角色設定檔失敗");
 
-        string name;                      // 字串變數
-        int blood, initCardNum, cardNum;  // 數值變數
-        int lastIndex = -1, index, agile; // 數值變數
+        string name;                          // 字串變數
+        int blood, initCardNum, cardNum;      // 數值變數
+        int lastIndex = -1, index, agile, no; // 數值變數
         char buffer[200];
         in.getline(buffer, sizeof(buffer)); // 讀取角色數量
         int num = stoi(buffer);             // 角色數量
@@ -69,6 +71,7 @@ private:
                 ss = split(buffer, " ");
 
                 bool pickUpAction = true;
+                no = stoi(ss[0]);    // 讀取敏捷資訊
                 agile = stoi(ss[1]); // 讀取敏捷資訊
                 vector<string> upAction = vector<string>();
                 vector<string> downAction = vector<string>();
@@ -83,7 +86,7 @@ private:
                         downAction.push_back(ss[k]);
                 }
 
-                player.AddSkill(agile, upAction, downAction);
+                player.AddSkill(CharacterSkill(no, agile, upAction, downAction));
             }
 
             if (this->debugMode)
@@ -94,7 +97,7 @@ private:
         in.close(); // 關閉檔案
     }
 
-    void loadMonster(string monsterFile)
+    void loadMonster(string monsterFile) // 載入怪物資料
     {
         /**
          * 讀取怪物設定檔
@@ -141,7 +144,7 @@ private:
                 for (int k = 3; k < lastIndex; k++)
                     actions.push_back(ss[k]);
 
-                monster.AddSkill(agile, actions, reset);
+                monster.AddSkill(MonsterSkill(agile, actions, reset));
             }
 
             if (this->debugMode)
@@ -152,26 +155,7 @@ private:
         in.close(); // 關閉檔案
     }
 
-public:
-    Gloomhaven(string characterFile, string monsterFile, bool debug = true)
-    {
-        // Debug模式
-        this->setDebugMode(debug);
-        this->players = map<string, Character>();
-        this->monsters = map<string, Monster>();
-
-        /*
-         * 讀取角色設定檔
-         */
-        this->loadCharacter(characterFile);
-
-        /**
-         * 讀取怪物設定檔
-         */
-        this->loadMonster(monsterFile);
-    };
-
-    void Run()
+    void inputPlayers() // 玩家輸入角色數量
     {
         char buffer[200];
         string tmp;
@@ -249,6 +233,7 @@ public:
                         cout << "牌組技能找不到: " << index << endl;
                         goto RESET;
                     }
+                    player.SelecCard(*card);
                 }
                 catch (const std::exception &e)
                 {
@@ -257,6 +242,13 @@ public:
             }
             this->selectedPlayers.push_back(player);
         }
+    }
+
+    void loadMap() // 玩家輸入地圖
+    {
+        char buffer[200];
+        string tmp;
+        int num = 0;
 
     SELECT_MAP:
         cout << "玩家輸入地圖名稱" << endl;
@@ -371,6 +363,7 @@ public:
         }
 
         vector<Point2d> mops;
+        int level = 0;
         for (int i = 0; i < this->selectedMonsterNum; i++)
         {
             in.getline(buffer, sizeof(buffer)); // 讀取怪物數量配置
@@ -381,6 +374,20 @@ public:
                 in.close();
                 goto SELECT_MAP;
             }
+
+            try
+            {
+                level = stoi(ss[this->selectedPlayerNum + 1]);
+            }
+            catch (const std::exception &e)
+            {
+                cout << "讀取地圖配置錯誤(怪物等級非數字): " << ss[this->selectedPlayerNum + 1] << endl;
+                in.close();
+                goto SELECT_MAP;
+            }
+
+            if (level == MonsterNone)
+                continue;
 
             string name = ss[0];
             int x, y;
@@ -404,21 +411,10 @@ public:
                 goto SELECT_MAP;
             }
 
-            try
-            {
-                num = stoi(ss[this->selectedPlayerNum + 1]);
-            }
-            catch (const std::exception &e)
-            {
-                cout << "讀取地圖配置錯誤(怪物數量非數字): " << ss[this->selectedPlayerNum + 1] << endl;
-                in.close();
-                goto SELECT_MAP;
-            }
-
             Monster monster = this->monsters[name];
             this->selectedMonsters.push_back(monster);
             mops.push_back(Point2d(x, y));
-            this->eachMonsterLevel.push_back(num);
+            this->eachMonsterLevel.push_back(level);
         }
         this->mapData.SetMonstersPos(mops);
 
@@ -431,29 +427,220 @@ public:
         for (int i = 0; i < this->selectedPlayerNum; i++)
         {
             bool interrupt = false;
-            cout << "玩家" << i + 1 << ": 選擇開場位子" << endl;
             while (!interrupt)
             {
+                this->mapData.ShowMap();
+                cout << "玩家" << i + 1 << ": 選擇開場位子" << endl;
                 string line = getInputLine();
                 for (int j = 0; j < line.size(); j++)
                 {
                     interrupt = this->mapData.MovePlayerInitPos(line[j]);
-                    this->mapData.ShowMe();
                     if (interrupt)
                         break;
                 }
             }
         }
         this->mapData.FinishInitState();
-        this->mapData.ShowMe();
+        if (this->debugMode)
+            this->mapData.ShowMe();
 
         cout << "------------------" << endl;
 
         this->mapData.ShowMap();
+    }
 
-        bool gameOver;
+public:
+    Gloomhaven(string characterFile, string monsterFile, bool debug = true)
+    {
+        // Debug模式
+        this->setDebugMode(debug);
+        this->players = map<string, Character>();
+        this->monsters = map<string, Monster>();
+
+        /*
+         * 讀取角色設定檔
+         */
+        this->loadCharacter(characterFile);
+
+        /**
+         * 讀取怪物設定檔
+         */
+        this->loadMonster(monsterFile);
+    };
+
+    void Run()
+    {
+        this->inputPlayers();
+        this->loadMap();
+
+        bool gameOver = false;
+        int round = 0;
         while (!gameOver)
         {
+            printf("-------------\nround %d:\n", ++round);
+
+            /** 準備階段-角色 **/
+            char A = 'A';
+            map<char, Character> liveTeam;
+            map<char, Character> deadTeam;
+            vector<readyAction> allAction;
+            for (int i = 0; i < this->selectedPlayers.size(); i++)
+            {
+                // 如果手牌跟棄牌堆小於2，表示陣亡
+                if (this->selectedPlayers[i].TrashCardSize() < 2 &&
+                    this->selectedPlayers[i].HandCardSize() < 2)
+                    deadTeam[A] = this->selectedPlayers[i];
+                else
+                    liveTeam[A] = this->selectedPlayers[i];
+
+                A++;
+            }
+
+            while (liveTeam.size() > 0)
+            {
+                printf("請決定角色與動作: ");
+                vector<string> ss = getInputLineSplit();
+                if (ss.size() < 2) // 如果輸入小於2，重新輸入
+                    continue;
+
+                if (ss[1] != "-1" && ss[1] != "check" && ss.size() < 3)
+                    continue;
+
+                char name = *ss[0].c_str();
+
+                if (deadTeam.find(name) != deadTeam.end()) // 如果玩家已經陣亡，則顯示
+                {
+                    printf("%c is killed!\n", name);
+                    continue;
+                }
+
+                if (liveTeam.find(name) == liveTeam.end()) // 如果玩家不存在，也重新輸入
+                {
+                    bool hasExists = false;
+                    for (int i = 0; i < allAction.size(); i++)
+                    {
+                        if (allAction[i].name == string(&name))
+                        {
+                            hasExists = true;
+                            break;
+                        }
+                    }
+
+                    if (hasExists)
+                        printf("%c 已經決定過!\n", name);
+                    else
+                        printf("%c 不存在!\n", name);
+
+                    continue;
+                }
+
+                Character p = liveTeam[name];
+
+                if (ss[1] == "-1") // 長休
+                {
+                    if (p.TrashCardSize() < 2)
+                    {
+                        printf("棄牌堆數量(%d)需要兩張以上，無法長休\n", p.TrashCardSize());
+                        continue;
+                    }
+
+                    allAction.push_back({
+                        .name = string(&name),
+                        .agile = 99,
+                        .action = ActionRest,
+                    });
+                }
+                else if (ss[1] == "check") // 確認手牌
+                {
+                    p.CheckHand();
+                    continue;
+                }
+                else // 出牌
+                {
+                    CharacterSkill *card1, *card2;
+
+                    card1 = p.GetCardFromStr(ss[1]);
+                    if (card1 == NULL)
+                    {
+                        printf("手牌中沒有%s\n", ss[1].c_str());
+                        continue;
+                    }
+
+                    card2 = p.GetCardFromStr(ss[2]);
+                    if (card2 == NULL)
+                    {
+                        printf("手牌中沒有%s\n", ss[2].c_str());
+                        continue;
+                    }
+
+                    allAction.push_back({
+                        .name = string(&name),
+                        .agile = p.Agile() + card1->Agile(),
+                        .action = ActionRest,
+                        .s1 = ss[1],
+                        .s2 = ss[2],
+                    });
+                }
+                liveTeam.erase(name);
+            }
+
+            /** 準備階段-怪物 **/
+            map<int, Point2d> mons = this->mapData.GetShowMonster(NULL);
+            map<int, Point2d>::iterator it;
+
+            for (it = mons.begin(); it != mons.end(); it++)
+            {
+                int i = it->first;
+                if (i >= this->selectedMonsters.size())
+                    throw "怪物資訊有問題！";
+
+                Monster mon = this->selectedMonsters[i];
+                MonsterSkill sk = mon.RandSkill();
+                allAction.push_back(readyAction{
+                    .name = mon.Name(),
+                    .agile = sk.Agile(),
+                    .action = ActionMonster,
+                    .s1 = sk.Text(),
+                    .s2 = "",
+                    .index = i,
+                });
+            }
+
+            /** 準備階段-輸出 **/
+            sort(allAction.begin(), allAction.end(), compareReadyAction);
+            for (int i = 0; i < allAction.size(); i++)
+            {
+                printf(
+                    "%s %d %s %s\n",
+                    allAction[i].name.c_str(),
+                    allAction[i].agile,
+                    allAction[i].s1.c_str(),
+                    allAction[i].s2.c_str());
+            }
+
+            /** 動作階段 **/
+            for (int i = 0; i < allAction.size(); i++)
+            {
+                printf(
+                    "%s %d %s %s\n",
+                    allAction[i].name.c_str(),
+                    allAction[i].agile,
+                    allAction[i].s1.c_str(),
+                    allAction[i].s2.c_str());
+
+                readyAction cmd = allAction[i];
+                if (cmd.action == ActionMonster) // 怪物動作
+                {
+                }
+                else if (cmd.action == ActionRest) // 長休
+                {
+                }
+                else if (cmd.action == ActionCard) // 出牌
+                {
+                }
+            }
+
+            /** 結算階段 **/
         }
     }
 };

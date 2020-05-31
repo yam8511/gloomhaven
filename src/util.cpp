@@ -4,15 +4,59 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <random>
+#include "game.h"
 using namespace std;
 
-// 怪物出現類型
-enum class MonsterAppear
+// 動作類型
+typedef int Action;
+const Action ActionRest = 1;    // 長休
+const Action ActionCard = 2;    // 出牌
+const Action ActionMonster = 3; // 怪物
+
+typedef struct
 {
-    None = 0,   // 不出現
-    Normal = 1, // 普通
-    Great = 2,  // 菁英
-};
+    string name;
+    int agile;
+    Action action;
+    string s1, s2;
+    int index;
+} readyAction;
+
+bool compareReadyAction(const readyAction &x, const readyAction &y)
+{
+    if (x.agile == y.agile) // 1. 排序敏捷
+    {
+        int cX = 0;
+        int cY = 0;
+        if (x.action == ActionMonster)
+            cX = 1;
+        if (y.action == ActionMonster)
+            cY = 1;
+
+        if (cX == cY)               // 2. 排序角色或怪物
+            return x.name < y.name; // 3. 排序名字
+
+        return cX < cY;
+    }
+
+    return x.agile < y.agile;
+}
+
+int randInt(int max) // 亂數產生數字
+{
+    std::random_device rd;
+    std::default_random_engine gen = std::default_random_engine(rd());
+    std::uniform_int_distribution<int> dis(0, max);
+
+    return dis(gen);
+}
+
+// 怪物出現類型
+typedef int MonsterAppear;
+const MonsterAppear MonsterNone = 0;   // 不出現
+const MonsterAppear MonsterNormal = 1; // 普通
+const MonsterAppear MonsterGreat = 2;  // 菁英
 
 // 地圖障礙類型
 typedef char MapObject;

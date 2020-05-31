@@ -16,6 +16,219 @@ private:
     vector<Point2d> monsterPos;       // 怪物位子
     bool initState;                   // 選擇位子階段
 
+    vector<vector<MapObject>> getOpenMap()
+    {
+        // 先全部設定為關閉位子
+        vector<vector<MapObject>> showData;
+        for (int i = 0; i < this->layout.size(); i++)
+        {
+            vector<MapObject> tmp;
+            for (int j = 0; j < this->layout[i].size(); j++)
+            {
+                if (this->layout[i][j] == PlayerObject)
+                    tmp.push_back(PlayerObject);
+                else
+                    tmp.push_back(DisableObject);
+            }
+
+            showData.push_back(tmp);
+        }
+
+        bool canStop;
+
+        if (this->initState) // 顯示初始位子
+        {
+            for (int i = 0; i < this->initPos.size(); i++)
+            {
+                Point2d p = this->initPos[i];
+                if (0 <= p.X() && p.X() < this->width &&
+                    0 <= p.Y() && p.Y() < this->height)
+                {
+                    showData[p.Y()][p.X()] = AvailableObject;
+                }
+            }
+
+            canStop = false;
+            for (int i = 0; i < this->initPos.size(); i++)
+            {
+                canStop = false;
+                // 先記錄玩家本身位子
+                Point2d pp = this->initPos[i];
+
+                // 從玩家位子往下走
+                for (int y = pp.Y(); y < this->height && !canStop; y++)
+                {
+                    // 從玩家位子往右走
+                    canStop = false;
+                    for (int x = pp.X(); x < this->width; x++)
+                    {
+                        MapObject m = this->layout[y][x];
+                        if (m == Wall)
+                            break;
+
+                        if (showData[y][x] == AvailableObject)
+                            m = AvailableObject;
+
+                        showData[y][x] = m;
+
+                        if (m == Door || (m == AvailableObject && !pp.Equal(Point2d(x, y))))
+                        {
+                            canStop = true;
+                            break;
+                        }
+                    }
+
+                    // 從玩家位子往左走
+                    for (int x = pp.X() - 1; 0 <= x; x--)
+                    {
+                        MapObject m = this->layout[y][x];
+                        if (m == Wall)
+                            break;
+
+                        if (showData[y][x] == AvailableObject)
+                            m = AvailableObject;
+
+                        showData[y][x] = m;
+
+                        if (m == Door || (m == AvailableObject && !pp.Equal(Point2d(x, y))))
+                        {
+                            canStop = true;
+                            break;
+                        }
+                    }
+                }
+
+                // 從玩家位子往上走
+                canStop = false;
+                for (int y = pp.Y() - 1; 0 <= y && !canStop; y--)
+                {
+                    // 從玩家位子往右走
+                    for (int x = pp.X(); x < this->width; x++)
+                    {
+                        MapObject m = this->layout[y][x];
+                        if (m == Wall)
+                            break;
+
+                        if (showData[y][x] == AvailableObject)
+                            m = AvailableObject;
+
+                        showData[y][x] = m;
+
+                        if (m == Door || (m == AvailableObject && !pp.Equal(Point2d(x, y))))
+                        {
+                            canStop = true;
+                            break;
+                        }
+                    }
+
+                    // 從玩家位子往左走
+                    for (int x = pp.X() - 1; 0 <= x; x--)
+                    {
+                        MapObject m = this->layout[y][x];
+                        if (m == Wall)
+                            break;
+
+                        if (showData[y][x] == AvailableObject)
+                            m = AvailableObject;
+
+                        showData[y][x] = m;
+
+                        if (m == Door || (m == AvailableObject && !pp.Equal(Point2d(x, y))))
+                        {
+                            canStop = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 從角色所在區域開始跑圖
+        canStop = false;
+        for (int i = 0; i < this->playerPos.size(); i++)
+        {
+            canStop = false;
+            // 先記錄玩家本身位子
+            Point2d pp = this->playerPos[i];
+
+            // 從玩家位子往下走
+            for (int y = pp.Y(); y < this->height && !canStop; y++)
+            {
+                // 從玩家位子往右走
+                canStop = false;
+                for (int x = pp.X(); x < this->width; x++)
+                {
+                    MapObject m = this->layout[y][x];
+                    if (m == Wall)
+                        break;
+
+                    showData[y][x] = m;
+
+                    if (m == Door || (m == PlayerObject && !pp.Equal(Point2d(x, y))))
+                    {
+                        canStop = true;
+                        break;
+                    }
+                }
+
+                // 從玩家位子往左走
+                for (int x = pp.X() - 1; 0 <= x; x--)
+                {
+                    MapObject m = this->layout[y][x];
+                    if (m == Wall)
+                        break;
+
+                    showData[y][x] = m;
+
+                    if (m == Door || (m == PlayerObject && !pp.Equal(Point2d(x, y))))
+                    {
+                        canStop = true;
+                        break;
+                    }
+                }
+            }
+
+            // 從玩家位子往上走
+            canStop = false;
+            for (int y = pp.Y() - 1; 0 <= y && !canStop; y--)
+            {
+                // 從玩家位子往右走
+                for (int x = pp.X(); x < this->width; x++)
+                {
+                    MapObject m = this->layout[y][x];
+                    if (m == Wall)
+                        break;
+
+                    showData[y][x] = m;
+
+                    if (m == Door || (m == PlayerObject && !pp.Equal(Point2d(x, y))))
+                    {
+                        canStop = true;
+                        break;
+                    }
+                }
+
+                // 從玩家位子往左走
+                for (int x = pp.X() - 1; 0 <= x; x--)
+                {
+                    MapObject m = this->layout[y][x];
+                    if (m == Wall)
+                        break;
+
+                    showData[y][x] = m;
+
+                    if (m == Door || (m == PlayerObject && !pp.Equal(Point2d(x, y))))
+                    {
+                        canStop = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return showData;
+    }
+
 public:
     MapData(int m = 0, int n = 0)
     {
@@ -122,118 +335,50 @@ public:
 
     Point2d GetCursorPos() { return this->cursorPos; }
 
-    void ShowMap() // 正式地圖
+    map<int, Point2d> GetShowMonster(vector<vector<MapObject>> *showData)
     {
-        // 先全部設定為關閉位子
-        vector<vector<MapObject>> showData;
-        for (int i = 0; i < this->layout.size(); i++)
+        if (showData == NULL)
         {
-            vector<MapObject> tmp;
-            for (int j = 0; j < this->layout[i].size(); j++)
-            {
-                if (this->layout[i][j] == PlayerObject)
-                    tmp.push_back(PlayerObject);
-                else
-                    tmp.push_back(DisableObject);
-            }
-
-            showData.push_back(tmp);
+            vector<vector<MapObject>> tmp = this->getOpenMap();
+            showData = &tmp;
         }
 
-        // 從角色所在區域開始跑圖
-        bool canStop;
-        for (int i = 0; i < this->playerPos.size(); i++)
-        {
-            canStop = false;
-            // 先記錄玩家本身位子
-            Point2d pp = this->playerPos[i];
+        map<int, Point2d> mons;
 
-            // 從玩家位子往下走
-            for (int y = pp.Y(); y < this->height && !canStop; y++)
-            {
-                // 從玩家位子往右走
-                canStop = false;
-                for (int x = pp.X(); x < this->width; x++)
-                {
-                    MapObject m = this->layout[y][x];
-                    if (m == Wall)
-                        break;
-
-                    showData[y][x] = m;
-
-                    if (m == Door || (m == PlayerObject && !pp.Equal(Point2d(x, y))))
-                    {
-                        canStop = true;
-                        break;
-                    }
-                }
-
-                // 從玩家位子往左走
-                for (int x = pp.X() - 1; 0 <= x; x--)
-                {
-                    MapObject m = this->layout[y][x];
-                    if (m == Wall)
-                        break;
-
-                    showData[y][x] = m;
-
-                    if (m == Door || (m == PlayerObject && !pp.Equal(Point2d(x, y))))
-                    {
-                        canStop = true;
-                        break;
-                    }
-                }
-            }
-
-            // 從玩家位子往上走
-            canStop = false;
-            for (int y = pp.Y() - 1; 0 <= y && !canStop; y--)
-            {
-                // 從玩家位子往右走
-                for (int x = pp.X(); x < this->width; x++)
-                {
-                    MapObject m = this->layout[y][x];
-                    if (m == Wall)
-                        break;
-
-                    showData[y][x] = m;
-
-                    if (m == Door || (m == PlayerObject && !pp.Equal(Point2d(x, y))))
-                    {
-                        canStop = true;
-                        break;
-                    }
-                }
-
-                // 從玩家位子往左走
-                for (int x = pp.X() - 1; 0 <= x; x--)
-                {
-                    MapObject m = this->layout[y][x];
-                    if (m == Wall)
-                        break;
-
-                    showData[y][x] = m;
-
-                    if (m == Door || (m == PlayerObject && !pp.Equal(Point2d(x, y))))
-                    {
-                        canStop = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        char a = 'a';
         for (int i = 0; i < this->monsterPos.size(); i++)
         {
             Point2d m = this->monsterPos[i];
-            if (showData[m.Y()][m.X()] != DisableObject)
+            if ((*showData)[m.Y()][m.X()] != DisableObject)
+                mons[i] = m;
+        }
+
+        return mons;
+    }
+
+    void ShowMap() // 正式地圖
+    {
+        // 先全部設定為關閉位子
+        vector<vector<MapObject>> showData = this->getOpenMap();
+
+        map<int, Point2d> mons = this->GetShowMonster(&showData);
+
+        if (this->initState)
+        {
+            for (int i = 0; i < this->initPos.size(); i++)
             {
-                Point2d p = this->monsterPos[i];
-                showData[p.Y()][p.X()] = a;
+                Point2d p = this->initPos[i];
+                showData[p.Y()][p.X()] = AvailableObject;
             }
 
-            a++;
+            showData[this->cursorPos.Y()][this->cursorPos.X()] = SelectedObject;
+        }
+
+        char a = 'a';
+        map<int, Point2d>::iterator mon;
+        for (mon = mons.begin(); mon != mons.end(); mon++)
+        {
+            Point2d p = mon->second;
+            showData[p.Y()][p.X()] = a + mon->first;
         }
 
         a = 'A';

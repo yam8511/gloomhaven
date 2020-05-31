@@ -24,12 +24,11 @@ public:
         this->greatAttack = greatAttack;
         this->greatAttackRange = greatAttackRange;
         this->skills = vector<MonsterSkill>();
-    };
+    }
 
-    void AddSkill(int agile, vector<string> actions, bool reset)
-    {
-        this->skills.push_back(MonsterSkill(agile, actions, reset));
-    };
+    void AddSkill(MonsterSkill sk) { this->skills.push_back(sk); }
+    MonsterSkill RandSkill() { return this->skills[randInt(this->skills.size())]; }
+    string Name() { return this->name; }
 
     void ShowMe()
     {

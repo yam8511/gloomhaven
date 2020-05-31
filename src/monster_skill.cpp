@@ -19,6 +19,27 @@ public:
         this->reset = reset;
     };
 
+    int Agile() { return this->agile; }
+    string Text()
+    {
+        string s = "";
+        for (int i = 0; i < this->actions.size(); i++)
+        {
+            if (this->actions[i] == "move")
+            {
+                s += this->actions[i] + " ";
+                i++;
+                s += to_string(this->actions[i].length()) + " ";
+            }
+            else
+            {
+                s += this->actions[i] + " ";
+            }
+        }
+
+        return s;
+    }
+
     void ShowMe()
     {
         cout << "-------------------" << endl;
