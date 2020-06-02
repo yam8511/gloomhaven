@@ -477,23 +477,20 @@ public:
         int round = 0;
         while (!gameOver)
         {
+            this->mapData.ShowMap();
             printf("-------------\nround %d:\n", ++round);
 
             /** 準備階段-角色 **/
-            char A = 'A';
-            map<char, Character> liveTeam;
-            map<char, Character> deadTeam;
+            map<int, Character> liveTeam;
+            map<int, Character> deadTeam;
             vector<readyAction> allAction;
             for (int i = 0; i < this->selectedPlayers.size(); i++)
             {
                 // 如果手牌跟棄牌堆小於2，表示陣亡
-                if (this->selectedPlayers[i].TrashCardSize() < 2 &&
-                    this->selectedPlayers[i].HandCardSize() < 2)
-                    deadTeam[A] = this->selectedPlayers[i];
+                if (this->selectedPlayers[i].Dead())
+                    deadTeam[i] = this->selectedPlayers[i];
                 else
-                    liveTeam[A] = this->selectedPlayers[i];
-
-                A++;
+                    liveTeam[i] = this->selectedPlayers[i];
             }
 
             while (liveTeam.size() > 0)
@@ -507,19 +504,25 @@ public:
                     continue;
 
                 char name = *ss[0].c_str();
+                if (int(name) > 90 || int(name) < 65)
+                    continue;
 
-                if (deadTeam.find(name) != deadTeam.end()) // 如果玩家已經陣亡，則顯示
+                int index = int(name) - int('A');
+                if (this->debugMode)
+                    printf("---> 選擇名稱: %c\n", name);
+
+                if (deadTeam.find(index) != deadTeam.end()) // 如果玩家已經陣亡，則顯示
                 {
                     printf("%c is killed!\n", name);
                     continue;
                 }
 
-                if (liveTeam.find(name) == liveTeam.end()) // 如果玩家不存在，也重新輸入
+                if (liveTeam.find(index) == liveTeam.end()) // 如果玩家不存在，也重新輸入
                 {
                     bool hasExists = false;
                     for (int i = 0; i < allAction.size(); i++)
                     {
-                        if (allAction[i].name == string(&name))
+                        if (allAction[i].index == i)
                         {
                             hasExists = true;
                             break;
@@ -534,9 +537,12 @@ public:
                     continue;
                 }
 
-                Character p = liveTeam[name];
+                Character p = liveTeam[index];
 
-                if (ss[1] == "-1") // 長休
+                string action = ss[1];
+                if (this->debugMode)
+                    printf("---> 選擇動作: %s\n", action.c_str());
+                if (action == "-1") // 長休
                 {
                     if (p.TrashCardSize() < 2)
                     {
@@ -545,24 +551,24 @@ public:
                     }
 
                     allAction.push_back({
-                        .name = string(&name),
+                        .index = index,
                         .agile = 99,
                         .action = ActionRest,
                     });
                 }
-                else if (ss[1] == "check") // 確認手牌
+                else if (action == "check") // 確認手牌
                 {
                     p.CheckHand();
                     continue;
                 }
                 else // 出牌
                 {
-                    CharacterSkill *card1, *card2;
+                    CharacterSkill *card1 = NULL, *card2 = NULL;
 
-                    card1 = p.GetCardFromStr(ss[1]);
+                    card1 = p.GetCardFromStr(action);
                     if (card1 == NULL)
                     {
-                        printf("手牌中沒有%s\n", ss[1].c_str());
+                        printf("手牌中沒有%s\n", action.c_str());
                         continue;
                     }
 
@@ -573,15 +579,18 @@ public:
                         continue;
                     }
 
+                    if (this->debugMode)
+                        printf("---> 選擇卡牌: %d %d\n", card1->No(), card2->No());
+
                     allAction.push_back({
-                        .name = string(&name),
+                        .index = index,
                         .agile = p.Agile() + card1->Agile(),
-                        .action = ActionRest,
-                        .s1 = ss[1],
-                        .s2 = ss[2],
+                        .action = ActionCard,
+                        .card1 = card1,
+                        .card2 = card2,
                     });
                 }
-                liveTeam.erase(name);
+                liveTeam.erase(index);
             }
 
             /** 準備階段-怪物 **/
@@ -590,19 +599,22 @@ public:
 
             for (it = mons.begin(); it != mons.end(); it++)
             {
+                printf("<-- 怪物 i: %d\n", it->first);
                 int i = it->first;
                 if (i >= this->selectedMonsters.size())
                     throw "怪物資訊有問題！";
 
                 Monster mon = this->selectedMonsters[i];
+                printf("<-- 怪物: %s", mon.Name().c_str());
                 MonsterSkill sk = mon.RandSkill();
-                allAction.push_back(readyAction{
-                    .name = mon.Name(),
+                printf("<-- 怪物技能: %s\n", sk.Text().c_str());
+                allAction.push_back({
+                    .index = i,
                     .agile = sk.Agile(),
                     .action = ActionMonster,
-                    .s1 = sk.Text(),
-                    .s2 = "",
-                    .index = i,
+                    .card1 = NULL,
+                    .card2 = NULL,
+                    .sk = &sk,
                 });
             }
 
@@ -610,24 +622,36 @@ public:
             sort(allAction.begin(), allAction.end(), compareReadyAction);
             for (int i = 0; i < allAction.size(); i++)
             {
-                printf(
-                    "%s %d %s %s\n",
-                    allAction[i].name.c_str(),
-                    allAction[i].agile,
-                    allAction[i].s1.c_str(),
-                    allAction[i].s2.c_str());
+                readyAction cmd = allAction[i];
+                if (cmd.action == ActionMonster)
+                {
+                    printf(
+                        "%s %d %s\n",
+                        this->selectedMonsters[cmd.index].Name().c_str(),
+                        cmd.agile,
+                        cmd.sk->Text().c_str());
+                }
+                else if (cmd.action == ActionCard)
+                {
+                    printf(
+                        "%c %d %d %d\n",
+                        char(cmd.index + int('A')),
+                        cmd.agile,
+                        cmd.card1->No(),
+                        cmd.card2->No());
+                }
+                else
+                {
+                    printf("%c %d\n",
+                           char(cmd.index + int('A')),
+                           cmd.agile);
+                }
             }
 
+            printf("＝＝＝＝＝＝ 動作階段 ＝＝＝＝＝＝\n");
             /** 動作階段 **/
             for (int i = 0; i < allAction.size(); i++)
             {
-                printf(
-                    "%s %d %s %s\n",
-                    allAction[i].name.c_str(),
-                    allAction[i].agile,
-                    allAction[i].s1.c_str(),
-                    allAction[i].s2.c_str());
-
                 readyAction cmd = allAction[i];
                 if (cmd.action == ActionMonster) // 怪物動作
                 {

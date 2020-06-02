@@ -348,6 +348,7 @@ public:
         for (int i = 0; i < this->monsterPos.size(); i++)
         {
             Point2d m = this->monsterPos[i];
+            printf("Map ---> %c", showMapObject((*showData)[m.Y()][m.X()]));
             if ((*showData)[m.Y()][m.X()] != DisableObject)
                 mons[i] = m;
         }

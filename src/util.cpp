@@ -16,11 +16,11 @@ const Action ActionMonster = 3; // 怪物
 
 typedef struct
 {
-    string name;
+    int index;
     int agile;
     Action action;
-    string s1, s2;
-    int index;
+    CharacterSkill *card1, *card2;
+    MonsterSkill *sk;
 } readyAction;
 
 bool compareReadyAction(const readyAction &x, const readyAction &y)
@@ -34,8 +34,8 @@ bool compareReadyAction(const readyAction &x, const readyAction &y)
         if (y.action == ActionMonster)
             cY = 1;
 
-        if (cX == cY)               // 2. 排序角色或怪物
-            return x.name < y.name; // 3. 排序名字
+        if (cX == cY)                 // 2. 排序角色或怪物
+            return x.index < y.index; // 3. 排序名字
 
         return cX < cY;
     }

@@ -1,11 +1,11 @@
 #include <iostream>
 #include <random>
-#include "./src/util.cpp"
 using namespace std;
 int main()
 {
 
-    std::cout << randInt(1) << std::endl;
+    int i = int('C') - int('A');
+    cout << int('Z') << "===" << int('A') << endl;
 
     return 0;
 }

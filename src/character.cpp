@@ -71,6 +71,11 @@ public:
 
     int TrashCardSize() { return this->trash.size(); }
     int HandCardSize() { return this->hand.size(); }
+    bool Dead()
+    {
+        return this->TrashCardSize() < 2 &&
+               this->HandCardSize() < 2;
+    }
     int Agile() { return this->agile; }
 
     // 選卡
