@@ -55,9 +55,10 @@ public:
     }
     void SetNo(int i) { this->no = i; }
 
-    char GetAlias()
+    string GetAlias()
     {
-        char name = char(this->no + int('A'));
+        char A = char(this->no + int('A'));
+        string name(&A);
         return name;
     }
 

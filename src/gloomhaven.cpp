@@ -484,8 +484,8 @@ public:
             printf("-------------\nround %d:\n", ++round);
 
             /** 準備階段-角色 **/
-            map<char, Character *> liveTeam;
-            map<char, Character *> deadTeam;
+            map<string, Character *> liveTeam;
+            map<string, Character *> deadTeam;
             vector<readyAction> allAction;
             for (int i = 0; i < this->selectedPlayers.size(); i++)
             {
@@ -510,20 +510,19 @@ public:
                     continue;
 
                 string name = ss[0];
-                char nameChar = *ss[0].c_str();
 
-                if (deadTeam.find(nameChar) != deadTeam.end()) // 如果玩家已經陣亡，則顯示
+                if (deadTeam.find(name) != deadTeam.end()) // 如果玩家已經陣亡，則顯示
                 {
                     printf("%s is killed!\n", name.c_str());
                     continue;
                 }
 
-                if (liveTeam.find(nameChar) == liveTeam.end()) // 如果玩家不存在，也重新輸入
+                if (liveTeam.find(name) == liveTeam.end()) // 如果玩家不存在，也重新輸入
                 {
                     bool hasExists = false;
                     for (int i = 0; i < allAction.size(); i++)
                     {
-                        if (*allAction[i].name == nameChar)
+                        if (allAction[i].name == name)
                         {
                             hasExists = true;
                             break;
@@ -538,7 +537,7 @@ public:
                     continue;
                 }
 
-                Character *p = liveTeam[nameChar];
+                Character *p = liveTeam[name];
 
                 if (ss[1] == "-1") // 長休
                 {
@@ -548,9 +547,8 @@ public:
                         continue;
                     }
 
-                    char ptr = p->GetAlias();
                     allAction.push_back({
-                        .name = &ptr,
+                        .name = p->GetAlias(),
                         .agile = 99,
                         .action = ActionRest,
                     });
@@ -578,16 +576,15 @@ public:
                         continue;
                     }
 
-                    char ptr = p->GetAlias();
                     allAction.push_back({
-                        .name = &ptr,
+                        .name = p->GetAlias(),
                         .agile = card1->Agile(),
                         .action = ActionCard,
                         .s1 = card1,
                         .s2 = card2,
                     });
                 }
-                liveTeam.erase(nameChar);
+                liveTeam.erase(name);
             }
 
             /** 準備階段-怪物 **/
