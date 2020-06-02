@@ -23,7 +23,19 @@ public:
         this->owner = NULL;
     };
 
-    int No() { return this->no; }
+    CharacterSkill *Clone()
+    {
+        CharacterSkill *newSkill = new CharacterSkill(
+            this->no, this->agile,
+            this->upActions,
+            this->downActions);
+        return newSkill;
+    }
+
+    int No()
+    {
+        return this->no;
+    }
     int Agile() { return this->agile; }
     void ChangePlayer(Character *player) { this->owner = player; }
 

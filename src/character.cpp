@@ -7,40 +7,61 @@ using namespace std;
 class Character
 {
 private:
-    string name;                   // 名字
-    int blood, agile;              // 血量, 敏捷
-    int initCardNum;               // 起始手牌數量
-    vector<CharacterSkill> skills; // 技能總表
-    vector<CharacterSkill> hand;   // 手牌
-    vector<CharacterSkill> trash;  // 丟棄手牌
+    string name;                     // 名字
+    int no;                          // 號碼
+    int blood;                       // 血量
+    int initCardNum;                 // 起始手牌數量
+    vector<CharacterSkill *> skills; // 技能總表
+    vector<CharacterSkill *> hand;   // 手牌
+    vector<CharacterSkill *> trash;  // 丟棄手牌
 
     string discardStr()
     {
         string s = "";
         if (this->trash.size() > 0)
         {
-            s += to_string(this->trash[0].No());
+            s += to_string(this->trash[0]->No());
             for (int i = 1; i < this->trash.size(); i++)
             {
-                s += " ," + to_string(this->trash[i].No());
+                s += " ," + to_string(this->trash[i]->No());
             }
         }
         return s;
     }
 
 public:
-    Character(string name = "", int blood = 0, int initCardNum = 0)
+    Character(string name, int blood, int initCardNum)
     {
         this->name = name;
         this->blood = blood;
-        this->agile = 0;
         this->initCardNum = initCardNum;
-        this->skills = vector<CharacterSkill>();
-        this->hand = vector<CharacterSkill>();
-        this->trash = vector<CharacterSkill>();
+        this->skills = vector<CharacterSkill *>();
+        this->hand = vector<CharacterSkill *>();
+        this->trash = vector<CharacterSkill *>();
     };
 
-    void AddSkill(CharacterSkill skill)
+    Character *Clone()
+    {
+        Character *newCharacter = new Character(
+            this->name,
+            this->blood,
+            this->initCardNum);
+        for (int i = 0; i < this->skills.size(); i++)
+        {
+            newCharacter->skills.push_back(this->skills[i]->Clone());
+        }
+
+        return newCharacter;
+    }
+    void SetNo(int i) { this->no = i; }
+
+    char GetAlias()
+    {
+        char name = char(this->no + int('A'));
+        return name;
+    }
+
+    void AddSkill(CharacterSkill *skill)
     {
         this->skills.push_back(skill);
     };
@@ -51,8 +72,8 @@ public:
     {
         for (int i = 0; i < this->skills.size(); i++)
         {
-            if (this->skills[i].No() == no)
-                return &this->skills[i];
+            if (this->skills[i]->No() == no)
+                return this->skills[i];
         }
 
         return NULL;
@@ -62,8 +83,8 @@ public:
     {
         for (int i = 0; i < this->skills.size(); i++)
         {
-            if (to_string(this->skills[i].No()) == no)
-                return &this->skills[i];
+            if (to_string(this->skills[i]->No()) == no)
+                return this->skills[i];
         }
 
         return NULL;
@@ -71,12 +92,16 @@ public:
 
     int TrashCardSize() { return this->trash.size(); }
     int HandCardSize() { return this->hand.size(); }
-    int Agile() { return this->agile; }
+    bool Dead()
+    {
+        return this->TrashCardSize() < 2 &&
+               this->HandCardSize() < 2;
+    }
 
     // 選卡
-    void SelecCard(CharacterSkill selectedCard)
+    void SelecCard(CharacterSkill *selectedCard)
     {
-        selectedCard.ChangePlayer(this);
+        selectedCard->ChangePlayer(this);
         this->hand.push_back(selectedCard);
     }
 
@@ -85,10 +110,10 @@ public:
         string s = "hand: ";
         if (this->hand.size() > 0)
         {
-            s += to_string(this->hand[0].No());
+            s += to_string(this->hand[0]->No());
             for (int i = 1; i < this->hand.size(); i++)
             {
-                s += " ," + to_string(this->hand[i].No());
+                s += " ," + to_string(this->hand[i]->No());
             }
         }
 
@@ -108,7 +133,7 @@ public:
             string s = getInputLine();
             for (int i = 0; i < this->trash.size(); i++)
             {
-                if (to_string(this->trash[i].No()) == s)
+                if (to_string(this->trash[i]->No()) == s)
                 {
                     this->hand.push_back(this->trash[i]);
                     this->trash.erase(this->trash.begin() + i);
@@ -125,7 +150,7 @@ public:
         printf("角色: 名字: %s, 血量: %d, 初始手牌: %d\n", this->name.c_str(), this->blood, this->initCardNum);
         for (int i = 0; i < this->skills.size(); i++)
         {
-            this->skills[i].ShowMe();
+            this->skills[i]->ShowMe();
         }
     }
 };

@@ -19,8 +19,8 @@ typedef struct
     string name;
     int agile;
     Action action;
-    string s1, s2;
-    int index;
+    CharacterSkill *s1, *s2;
+    MonsterSkill *sk;
 } readyAction;
 
 bool compareReadyAction(const readyAction &x, const readyAction &y)
