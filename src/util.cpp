@@ -33,6 +33,7 @@ string getPlayerCode(int i)
     Acode.push_back("T");
     Acode.push_back("U");
     Acode.push_back("V");
+    Acode.push_back("W");
     Acode.push_back("X");
     Acode.push_back("Y");
     Acode.push_back("Z");
@@ -45,6 +46,43 @@ string getPlayerCode(int i)
     return a;
 }
 
+string getMonsterCode(int i)
+{
+    vector<string> acode;
+    acode.push_back("a");
+    acode.push_back("b");
+    acode.push_back("c");
+    acode.push_back("d");
+    acode.push_back("e");
+    acode.push_back("f");
+    acode.push_back("g");
+    acode.push_back("h");
+    acode.push_back("i");
+    acode.push_back("j");
+    acode.push_back("k");
+    acode.push_back("l");
+    acode.push_back("m");
+    acode.push_back("n");
+    acode.push_back("o");
+    acode.push_back("p");
+    acode.push_back("q");
+    acode.push_back("r");
+    acode.push_back("s");
+    acode.push_back("t");
+    acode.push_back("u");
+    acode.push_back("v");
+    acode.push_back("w");
+    acode.push_back("x");
+    acode.push_back("y");
+    acode.push_back("z");
+
+    string a = "";
+    if (i < acode.size())
+        a = acode[i];
+
+    acode.clear();
+    return a;
+}
 // 動作類型
 typedef int Action;
 const Action ActionRest = 1;    // 長休
@@ -56,6 +94,7 @@ typedef struct
     string name;
     int agile;
     Action action;
+    Character *p;
     CharacterSkill *s1, *s2;
     MonsterSkill *sk;
 } readyAction;

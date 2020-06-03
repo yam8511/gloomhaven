@@ -10,14 +10,17 @@ private:
     int no;                                           // 號碼
     MonsterAppear level;                              // 等級
     string name;                                      // 名字
+    int shield, hp;                                   // 護盾, 血量
     int normalBlood, normalAttack, normalAttackRange; // 普通等級之血量、普通等級之攻擊傷害、普通等級之射程
     int greatBlood, greatAttack, greatAttackRange;    // 菁英等級之血量、菁英等級之攻擊傷害、菁英等級之射程
     vector<MonsterSkill *> skills;                    // 技能總表
-    vector<CharacterSkill *> trash;                   // 丟棄手牌
+    vector<MonsterSkill *> trash;                     // 丟棄手牌
 public:
     Monster(string name, int normalBlood = 0, int normalAttack = 0, int normalAttackRange = 0,
             int greatBlood = 0, int greatAttack = 0, int greatAttackRange = 0)
     {
+        this->shield = 0;
+        this->hp = 0;
         this->name = name;
         this->normalBlood = normalBlood;
         this->normalAttack = normalAttack;
@@ -26,6 +29,7 @@ public:
         this->greatAttack = greatAttack;
         this->greatAttackRange = greatAttackRange;
         this->skills = vector<MonsterSkill *>();
+        this->trash = vector<MonsterSkill *>();
     }
 
     Monster *Clone()
@@ -50,12 +54,27 @@ public:
     }
 
     int No() { return this->no; }
+    int HP() { return this->hp; }
+    int Shield() { return this->shield; }
     string Name() { return this->name; }
-
+    string Alias() { return getMonsterCode(this->no); }
     Monster *SetNo(int no)
     {
         this->no = no;
         return this;
+    }
+
+    void Trash(int no)
+    {
+        for (int i = 0; i < this->skills.size(); i++)
+        {
+            if (this->skills[i]->No() == no)
+            {
+                this->trash.push_back(this->skills[i]);
+                this->skills.erase(this->skills.begin() + i);
+                break;
+            }
+        }
     }
 
     Monster *SetLevel(MonsterAppear level)
@@ -71,8 +90,26 @@ public:
     }
     MonsterSkill *RandSkill()
     {
-        return this->skills[0];
-        // return this->skills[randInt(this->skills.size())];
+        // return this->skills[5];
+        return this->skills[randInt(this->skills.size())];
+    }
+
+    void AddShield(int n)
+    {
+        this->shield += n;
+    }
+
+    void Heal(int n)
+    {
+        int nowHP = this->hp + n;
+        if (nowHP < 0)
+            nowHP = 0;
+        else if (this->level == MonsterNormal && nowHP > this->normalBlood)
+            nowHP = this->normalBlood;
+        else if (this->level == MonsterGreat && nowHP > this->greatBlood)
+            nowHP = this->greatBlood;
+
+        this->hp = nowHP;
     }
 
     void ShowMe()

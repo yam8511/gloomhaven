@@ -494,12 +494,12 @@ public:
             vector<readyAction> allAction;
             for (int i = 0; i < this->selectedPlayers.size(); i++)
             {
-                cout << "i -> " << i << ", Alias -> " << this->selectedPlayers[i]->GetAlias() << " | " << endl;
+                cout << "i -> " << i << ", Alias -> " << this->selectedPlayers[i]->Alias() << " | " << endl;
                 // 如果手牌跟棄牌堆小於2，表示陣亡
                 if (this->selectedPlayers[i]->Dead())
-                    deadTeam[this->selectedPlayers[i]->GetAlias()] = this->selectedPlayers[i];
+                    deadTeam[this->selectedPlayers[i]->Alias()] = this->selectedPlayers[i];
                 else
-                    liveTeam[this->selectedPlayers[i]->GetAlias()] = this->selectedPlayers[i];
+                    liveTeam[this->selectedPlayers[i]->Alias()] = this->selectedPlayers[i];
             }
 
             printf("====== 開始決定角色 ====\n");
@@ -553,9 +553,10 @@ public:
                     }
 
                     allAction.push_back({
-                        .name = p->GetAlias(),
+                        .name = p->Alias(),
                         .agile = 99,
                         .action = ActionRest,
+                        .p = p,
                     });
                 }
                 else if (ss[1] == "check") // 確認手牌
@@ -582,9 +583,10 @@ public:
                     }
 
                     allAction.push_back({
-                        .name = p->GetAlias(),
+                        .name = p->Alias(),
                         .agile = card1->Agile(),
                         .action = ActionCard,
+                        .p = p,
                         .s1 = card1,
                         .s2 = card2,
                     });
@@ -610,6 +612,7 @@ public:
                     .name = s,
                     .agile = sk->Agile(),
                     .action = ActionMonster,
+                    .p = NULL,
                     .s1 = NULL,
                     .s2 = NULL,
                     .sk = sk,
@@ -617,6 +620,7 @@ public:
             }
 
             /** 準備階段-輸出 **/
+            map<int, int> playerAgile;
             sort(allAction.begin(), allAction.end(), compareReadyAction);
             for (int i = 0; i < allAction.size(); i++)
             {
@@ -630,6 +634,7 @@ public:
                 }
                 else if (cmd.action == ActionCard)
                 {
+                    playerAgile[cmd.s1->Owner()->No()] = cmd.agile;
                     cout
                         << cmd.name << " "
                         << cmd.agile << " "
@@ -638,6 +643,7 @@ public:
                 }
                 else
                 {
+                    playerAgile[cmd.s1->Owner()->No()] = cmd.agile;
                     cout
                         << cmd.name << " "
                         << cmd.agile << " -1"
@@ -650,34 +656,177 @@ public:
             cout << "/** 動作階段 **/" << endl;
             for (int i = 0; i < allAction.size(); i++)
             {
-
                 readyAction cmd = allAction[i];
 
                 if (cmd.action == ActionMonster) // 怪物動作
                 {
-                    cmd.sk->Action(this->mapData, cmd.sk->Owner()->No());
                     if (this->debugMode)
                         cout
                             << cmd.name << " "
                             << cmd.agile << " "
                             << cmd.sk->Text() << endl;
+
+                    vector<string> actions = cmd.sk->Actions();
+                    for (int i = 0; i < actions.size(); i++)
+                    {
+                        cout << "act " << i << " : " << actions[i] << endl;
+                        string act = actions[i];
+                        if (act == "move") // 移動
+                        {
+                            i++;
+                            cout << "arrow " << i << " : " << actions[i] << endl;
+                            string arrow = actions[i];
+                            this->mapData->Move(true, cmd.sk->Owner()->No(), actions[i]);
+                            this->mapData->ShowMap();
+                        }
+                        else if (act == "shield") // 防護
+                        {
+                            i++;
+                            int sh = stoi(actions[i]);
+                            cmd.sk->Owner()->AddShield(sh);
+                            cout
+                                << cmd.sk->Owner()->Alias()
+                                << " shield "
+                                << sh
+                                << " this turn" << endl;
+                        }
+                        else if (act == "heal") // 治療
+                        {
+                            i++;
+                            int heal = stoi(actions[i]);
+                            cmd.sk->Owner()->Heal(heal);
+                            cout
+                                << cmd.sk->Owner()->Alias()
+                                << " heal " << heal
+                                << ", now hp is "
+                                << cmd.sk->Owner()->HP() << endl;
+                        }
+                        else if (act == "attack") // 攻擊
+                        {
+                            i++;
+                            int hurt = stoi(actions[i]);
+                            int range = 0;
+                            if (i + 1 < actions.size() && actions[i + 1] == "range")
+                            {
+                                i += 2;
+                                range = stoi(actions[i]);
+                            }
+
+                            vector<int> playersNo = this->mapData->CheckPlayersInMonsterAttackRange(
+                                cmd.sk->Owner()->No(), range);
+
+                            if (playersNo.size() > 0)
+                            {
+                                int targetNo = -1;
+                                if (playersNo.size() == 1)
+                                {
+                                    // 範圍內的角色
+                                    targetNo = playersNo[0];
+                                }
+                                else
+                                {
+                                    int minAgile = 99;
+                                    for (int j = 0; j < playersNo.size(); j++)
+                                    {
+                                        int no = playersNo[j];
+                                        if (playerAgile[no] < minAgile)
+                                        {
+                                            minAgile = playerAgile[no];
+                                            targetNo = no;
+                                        }
+                                    }
+                                }
+
+                                if (targetNo > -1)
+                                {
+                                    Character *targetPlayer = this->selectedPlayers[targetNo];
+                                    if (targetPlayer->Hurt(hurt))
+                                        cout << targetPlayer->Alias() << " is killed!!" << endl;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
+
+                        cmd.sk->Owner()->Trash(cmd.sk->No());
+                    }
                 }
-                else if (cmd.action == ActionCard) // 出牌
+                else
                 {
-                    if (this->debugMode)
-                        cout
-                            << cmd.name << " "
-                            << cmd.agile << " "
-                            << cmd.s1->No() << " "
-                            << cmd.s2->No() << endl;
-                }
-                else // 長休
-                {
-                    if (this->debugMode)
-                        cout
-                            << cmd.name << " "
-                            << cmd.agile << " -1"
-                            << endl;
+                    if (cmd.action == ActionCard) // 出牌
+                    {
+                        if (this->debugMode)
+                            cout
+                                << cmd.name << " "
+                                << cmd.agile << " "
+                                << cmd.s1->No() << " "
+                                << cmd.s2->No() << endl;
+
+                        if (cmd.p->Dead())
+                            continue;
+
+                        cout << cmd.p->Alias()
+                             << "'s turn: card "
+                             << cmd.s1->No() << " "
+                             << cmd.s2->No() << endl;
+
+                        bool ok = false;
+                        char first = '\0', second = '\0';
+                        // TODO: 選擇手牌與執行動作
+                        while (!ok)
+                        {
+                            string input = getInputLine();
+                            if (input == "check")
+                            {
+                                for (int j = 0; j < this->selectedPlayers.size(); j++)
+                                {
+                                    if (this->selectedPlayers[j]->Dead())
+                                    {
+                                        continue;
+                                    }
+                                    cout << this->selectedPlayers[j]->Alias()
+                                         << "-hp: "
+                                         << this->selectedPlayers[j]->HP()
+                                         << " , shield: "
+                                         << this->selectedPlayers[j]->Shield()
+                                         << endl;
+                                }
+
+                                continue;
+                            }
+                            else if (*to_string(cmd.s1->No()).c_str() == input[0])
+                            {
+                            }
+                            else if (*to_string(cmd.s2->No()).c_str() == input[0])
+                            {
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                    else // 長休
+                    {
+                        if (this->debugMode)
+                            cout
+                                << cmd.name << " "
+                                << cmd.agile << " -1"
+                                << endl;
+
+                        if (cmd.p->Dead())
+                            continue;
+
+                        int cardNo = cmd.p->TakeLongRest();
+
+                        cout << cmd.p->Alias()
+                             << " heal 2, now hp is "
+                             << cmd.p->HP() << endl
+                             << "remove card: "
+                             << cardNo << endl;
+                    }
                 }
             }
 

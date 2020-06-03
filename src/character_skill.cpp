@@ -32,12 +32,10 @@ public:
         return newSkill;
     }
 
-    int No()
-    {
-        return this->no;
-    }
+    int No() { return this->no; }
     int Agile() { return this->agile; }
     void ChangePlayer(Character *player) { this->owner = player; }
+    Character *Owner() { return this->owner; }
 
     void ShowMe()
     {

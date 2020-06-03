@@ -9,7 +9,7 @@ class Character
 private:
     string name;                     // 名字
     int no;                          // 號碼
-    int blood;                       // 血量
+    int blood, shield;               // 血量
     int initCardNum;                 // 起始手牌數量
     vector<CharacterSkill *> skills; // 技能總表
     vector<CharacterSkill *> hand;   // 手牌
@@ -34,6 +34,7 @@ public:
     {
         this->name = name;
         this->blood = blood;
+        this->shield = 0;
         this->initCardNum = initCardNum;
         this->skills = vector<CharacterSkill *>();
         this->hand = vector<CharacterSkill *>();
@@ -54,8 +55,23 @@ public:
         return newCharacter;
     }
     void SetNo(int i) { this->no = i; }
+    void AddShield(int n)
+    {
+        this->shield += n;
+    }
+    int No() { return this->no; }
+    bool Hurt(int hp)
+    {
+        this->blood = this->blood - hp;
+        if (this->blood < 0)
+            this->blood = 0;
 
-    string GetAlias()
+        return this->blood == 0; // 回傳有沒有陣亡
+    }
+    int HP() { return this->blood; }
+    int Shield() { return this->shield; }
+
+    string Alias()
     {
         return getPlayerCode(this->no);
     }
@@ -93,8 +109,9 @@ public:
     int HandCardSize() { return this->hand.size(); }
     bool Dead()
     {
-        return this->TrashCardSize() < 2 &&
-               this->HandCardSize() < 2;
+        return this->blood == 0 ||
+               (this->TrashCardSize() < 2 &&
+                this->HandCardSize() < 2);
     }
 
     // 選卡
@@ -120,12 +137,11 @@ public:
         printf("%s\n", s.c_str());
     }
 
-    void TakeLongRest() // 長休
+    int TakeLongRest() // 長休
     {
         this->blood += 2;
 
         // 從棄牌堆中刪除一張，其他加回手牌
-        bool ok = false;
         do
         {
             printf("長休: 請從棄牌堆[%s]捨棄一張牌，其餘加入手牌:", this->discardStr().c_str());
@@ -136,11 +152,10 @@ public:
                 {
                     this->hand.push_back(this->trash[i]);
                     this->trash.erase(this->trash.begin() + i);
-                    ok = true;
-                    break;
+                    return this->trash[i]->No();
                 }
             }
-        } while (!ok);
+        } while (true);
     }
 
     void ShowMe()

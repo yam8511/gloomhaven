@@ -24,6 +24,7 @@ public:
     };
 
     int Agile() { return this->agile; }
+    int No() { return this->no; }
     bool Reset() { return this->reset; }
     vector<string> Actions()
     {
@@ -35,31 +36,6 @@ public:
     }
 
     Monster *Owner() { return this->ownner; }
-
-    void Action(MapData *m, int no)
-    {
-        for (int i = 0; i < this->actions.size(); i++)
-        {
-            cout << "act " << i << " : " << this->actions[i] << endl;
-            string act = this->actions[i];
-            if (act == "move") // 移動
-            {
-                i++;
-                cout << "arrow " << i << " : " << this->actions[i] << endl;
-                string arrow = this->actions[i];
-                m->Move(true, no, this->actions[i]);
-            }
-            else if (act == "shield") // 防護
-            {
-            }
-            else if (act == "attack") // 攻擊
-            {
-            }
-            else if (act == "heal") // 治療
-            {
-            }
-        }
-    }
 
     string Text()
     {

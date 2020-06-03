@@ -451,6 +451,25 @@ public:
         return mons;
     }
 
+    vector<int> CheckPlayersInMonsterAttackRange(int no, int range)
+    {
+        vector<int> nums;
+        Point2d origin = this->monsterPos[no];
+        if (range < 2)
+        {
+            range = 1;
+        }
+
+        for (int i = 0; i < this->playerPos.size(); i++)
+        {
+            if (origin.Distance(this->playerPos[i]) <= range)
+            {
+                nums.push_back(i);
+            }
+        }
+
+        return nums;
+    }
     vector<vector<MapObject>> GetMap()
     {
         // 先全部設定為關閉位子
