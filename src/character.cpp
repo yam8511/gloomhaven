@@ -57,9 +57,7 @@ public:
 
     string GetAlias()
     {
-        char A = char(this->no + int('A'));
-        string name(&A);
-        return name;
+        return getPlayerCode(this->no);
     }
 
     void AddSkill(CharacterSkill *skill)

@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <vector>
 #include <map>
@@ -20,6 +21,7 @@ private:
     {
         // 先全部設定為關閉位子
         vector<vector<MapObject>> showData;
+        showData.clear();
         for (int i = 0; i < this->layout.size(); i++)
         {
             vector<MapObject> tmp;
@@ -335,12 +337,22 @@ public:
 
     Point2d GetCursorPos() { return this->cursorPos; }
 
-    map<int, Point2d> GetShowMonster(vector<vector<MapObject>> *showData)
+    map<int, Point2d> GetShowMonster(vector<vector<MapObject>> rawMap)
     {
-        if (showData == NULL)
+        vector<vector<MapObject>> showData = vector<vector<MapObject>>();
+        if (rawMap.size() == 0)
         {
-            vector<vector<MapObject>> tmp = this->getOpenMap();
-            showData = &tmp;
+            rawMap = this->getOpenMap();
+        }
+
+        for (int i = 0; i < rawMap.size(); i++)
+        {
+            vector<MapObject> t = vector<MapObject>();
+            for (int j = 0; j < rawMap[i].size(); j++)
+            {
+                t.push_back(rawMap[i][j]);
+            }
+            showData.push_back(t);
         }
 
         map<int, Point2d> mons;
@@ -348,7 +360,7 @@ public:
         for (int i = 0; i < this->monsterPos.size(); i++)
         {
             Point2d m = this->monsterPos[i];
-            if ((*showData)[m.Y()][m.X()] != DisableObject)
+            if (showData[m.Y()][m.X()] != DisableObject)
                 mons[i] = m;
         }
 
@@ -360,7 +372,7 @@ public:
         // 先全部設定為關閉位子
         vector<vector<MapObject>> showData = this->getOpenMap();
 
-        map<int, Point2d> mons = this->GetShowMonster(&showData);
+        map<int, Point2d> mons = this->GetShowMonster(showData);
 
         if (this->initState)
         {

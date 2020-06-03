@@ -588,7 +588,7 @@ public:
             }
 
             /** 準備階段-怪物 **/
-            map<int, Point2d> mons = this->mapData->GetShowMonster(NULL);
+            map<int, Point2d> mons = this->mapData->GetShowMonster(vector<vector<MapObject>>());
             map<int, Point2d>::iterator it;
 
             for (it = mons.begin(); it != mons.end(); it++)
@@ -599,7 +599,6 @@ public:
 
                 Monster *mon = this->selectedMonsters[i];
                 MonsterSkill *sk = mon->RandSkill();
-                cout << "Mname : " << mon->Name() << endl;
                 char s[100] = {};
                 mon->Name().copy(s, mon->Name().size());
                 allAction.push_back({
@@ -627,7 +626,7 @@ public:
                 {
                     cout << cmd.name << " "
                          << cmd.agile << " "
-                         << cmd.s1->No()
+                         << cmd.s1->No() << " "
                          << cmd.s2->No() << endl;
                 }
                 else
@@ -639,19 +638,34 @@ public:
             }
 
             /** 動作階段 **/
+            cout << endl;
             cout << "/** 動作階段 **/" << endl;
             for (int i = 0; i < allAction.size(); i++)
             {
 
                 readyAction cmd = allAction[i];
+
                 if (cmd.action == ActionMonster) // 怪物動作
                 {
-                }
-                else if (cmd.action == ActionRest) // 長休
-                {
+                    if (this->debugMode)
+                        cout << cmd.name << " "
+                             << cmd.agile << " "
+                             << cmd.sk->Text() << endl;
                 }
                 else if (cmd.action == ActionCard) // 出牌
                 {
+                    if (this->debugMode)
+                        cout << cmd.name << " "
+                             << cmd.agile << " "
+                             << cmd.s1->No() << " "
+                             << cmd.s2->No() << endl;
+                }
+                else // 長休
+                {
+                    if (this->debugMode)
+                        cout << cmd.name << " "
+                             << cmd.agile << " -1"
+                             << endl;
                 }
             }
 

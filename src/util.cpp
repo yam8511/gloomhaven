@@ -8,6 +8,43 @@
 #include "game.h"
 using namespace std;
 
+string getPlayerCode(int i)
+{
+    vector<string> Acode;
+    Acode.push_back("A");
+    Acode.push_back("B");
+    Acode.push_back("C");
+    Acode.push_back("D");
+    Acode.push_back("E");
+    Acode.push_back("F");
+    Acode.push_back("G");
+    Acode.push_back("H");
+    Acode.push_back("I");
+    Acode.push_back("J");
+    Acode.push_back("K");
+    Acode.push_back("L");
+    Acode.push_back("M");
+    Acode.push_back("N");
+    Acode.push_back("O");
+    Acode.push_back("P");
+    Acode.push_back("Q");
+    Acode.push_back("R");
+    Acode.push_back("S");
+    Acode.push_back("T");
+    Acode.push_back("U");
+    Acode.push_back("V");
+    Acode.push_back("X");
+    Acode.push_back("Y");
+    Acode.push_back("Z");
+
+    string a = "";
+    if (i < Acode.size())
+        a = Acode[i];
+
+    Acode.clear();
+    return a;
+}
+
 // 動作類型
 typedef int Action;
 const Action ActionRest = 1;    // 長休
