@@ -335,7 +335,91 @@ public:
         return false;
     }
 
-    Point2d GetCursorPos() { return this->cursorPos; }
+    // 移動玩家或怪物
+    void Move(bool isMonster, int no, string action)
+    {
+        if (isMonster) // 怪物移動
+        {
+            // cout << "mon pos -> " << this->monsterPos.size() << endl;
+            // cout << "mon no -> " << no << endl;
+            if (no >= this->monsterPos.size())
+                return;
+
+            vector<vector<MapObject>> currentMap = this->GetMap();
+            Point2d pos = this->monsterPos[no];
+            vector<Point2d> canStop;
+            for (int i = 0; i < action.size(); i++)
+            {
+                char act = action[i];
+                // cout << " Pos -> " << ends;
+                // pos.ShowMe();
+                // cout << " Act Now -> " << act << endl;
+                if (act == W)
+                    pos = Point2d(pos.X(), pos.Y() - 1);
+                else if (act == S)
+                    pos = Point2d(pos.X(), pos.Y() + 1);
+                else if (act == A)
+                    pos = Point2d(pos.X() - 1, pos.Y());
+                else if (act == D)
+                    pos = Point2d(pos.X() + 1, pos.Y());
+                else
+                    continue;
+
+                // cout << " Map Current -> " << currentMap[pos.Y()][pos.X()] << endl;
+
+                if (currentMap[pos.Y()][pos.X()] == Stuck ||
+                    currentMap[pos.Y()][pos.X()] == DisableObject)
+                    break;
+
+                if (currentMap[pos.Y()][pos.X()] == Floor)
+                    canStop.push_back(pos);
+            }
+
+            if (canStop.size() > 0)
+            {
+                pos = canStop[canStop.size() - 1];
+                this->monsterPos[no] = pos;
+            }
+        }
+        else
+        {
+            if (no >= this->playerPos.size())
+                return;
+
+            vector<vector<MapObject>> currentMap = this->GetMap();
+            Point2d pos = this->playerPos[no];
+            vector<Point2d> canStop;
+            for (int i = 0; i < action.size(); i++)
+            {
+                char act = action[i];
+                if (act == W)
+                    pos = Point2d(pos.X(), pos.Y() - 1);
+                else if (act == S)
+                    pos = Point2d(pos.X(), pos.Y() + 1);
+                else if (act == A)
+                    pos = Point2d(pos.X() - 1, pos.Y());
+                else if (act == D)
+                    pos = Point2d(pos.X() + 1, pos.Y());
+                else
+                    continue;
+
+                if (currentMap[pos.Y()][pos.X()] == Floor ||
+                    currentMap[pos.Y()][pos.X()] == Door)
+                    canStop.push_back(pos);
+            }
+
+            if (canStop.size() > 0)
+            {
+                pos = canStop[canStop.size() - 1];
+                this->playerPos[no] = pos;
+            }
+        }
+    }
+
+    Point2d GetCursorPos()
+    {
+        return this->cursorPos;
+    }
 
     map<int, Point2d> GetShowMonster(vector<vector<MapObject>> rawMap)
     {
@@ -365,6 +449,29 @@ public:
         }
 
         return mons;
+    }
+
+    vector<vector<MapObject>> GetMap()
+    {
+        // 先全部設定為關閉位子
+        vector<vector<MapObject>> showData = this->getOpenMap();
+
+        map<int, Point2d> mons = this->GetShowMonster(showData);
+
+        map<int, Point2d>::iterator mon;
+        for (mon = mons.begin(); mon != mons.end(); mon++)
+        {
+            Point2d p = mon->second;
+            showData[p.Y()][p.X()] = MonsterObject;
+        }
+
+        for (int i = 0; i < this->playerPos.size(); i++)
+        {
+            Point2d p = this->playerPos[i];
+            showData[p.Y()][p.X()] = PlayerObject;
+        }
+
+        return showData;
     }
 
     void ShowMap() // 正式地圖

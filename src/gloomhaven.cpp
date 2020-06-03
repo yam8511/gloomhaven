@@ -6,10 +6,11 @@
 #include <map>
 #include <random>
 #include <algorithm>
+#include "game.h"
 #include "util.cpp"
+#include "map_data.cpp"
 #include "character.cpp"
 #include "monster.cpp"
-#include "map_data.cpp"
 using namespace std;
 
 // 遊戲
@@ -19,12 +20,11 @@ private:
     map<string, Character *> players; // 角色資料
     map<string, Monster *> monsters;  // 怪物資料
 
-    MapData *mapData;                       // 地圖
-    vector<Character *> selectedPlayers;    // 選中角色
-    int selectedPlayerNum;                  // 選擇角色數量
-    vector<Monster *> selectedMonsters;     // 選中怪物
-    int selectedMonsterNum;                 // 選擇怪物數量
-    vector<MonsterAppear> eachMonsterLevel; // 每一隻怪物的等級
+    MapData *mapData;                    // 地圖
+    vector<Character *> selectedPlayers; // 選中角色
+    int selectedPlayerNum;               // 選擇角色數量
+    vector<Monster *> selectedMonsters;  // 選中怪物
+    int selectedMonsterNum;              // 選擇怪物數量
 
     bool debugMode;
 
@@ -127,12 +127,14 @@ private:
             greatBlood = stoi(ss[4]);        // 菁英等級之血量
             greatAttack = stoi(ss[5]);       // 菁英等級之攻擊傷害
             greatAttackRange = stoi(ss[6]);  // 菁英等級之射程
-            Monster *monster = new Monster(name,
-                                           normalBlood, normalAttack, normalAttackRange,
-                                           greatBlood, greatAttack, greatAttackRange);
+            Monster *monster = new Monster(
+                name,
+                normalBlood, normalAttack, normalAttackRange,
+                greatBlood, greatAttack, greatAttackRange);
 
             for (int j = 0; j < 6; j++)
             {
+                int no;     // 號碼
                 int agile;  // 數值變數
                 bool reset; // 重洗標誌
                 vector<string> actions;
@@ -140,12 +142,14 @@ private:
                 in.getline(buffer, sizeof(buffer)); // 讀取怪物基本資訊
                 ss = split(buffer, " ");
                 int lastIndex = ss.size() - 1;
+
+                no = stoi(ss[1]);
                 agile = stoi(ss[2]);
                 reset = ss[lastIndex] == "r";
                 for (int k = 3; k < lastIndex; k++)
                     actions.push_back(ss[k]);
 
-                monster->AddSkill(new MonsterSkill(agile, actions, reset));
+                monster->AddSkill(new MonsterSkill(monster, no, agile, actions, reset));
             }
 
             if (this->debugMode)
@@ -356,7 +360,6 @@ private:
             num = stoi(buffer);
             this->selectedMonsterNum = num;
             this->selectedMonsters = vector<Monster *>();
-            this->eachMonsterLevel = vector<MonsterAppear>();
         }
         catch (const std::exception &e)
         {
@@ -414,10 +417,12 @@ private:
                 goto SELECT_MAP;
             }
 
-            Monster *monster = this->monsters[name];
+            Monster *monster = this->monsters[name]
+                                   ->Clone()
+                                   ->SetNo(this->selectedMonsters.size())
+                                   ->SetLevel(level);
             this->selectedMonsters.push_back(monster);
             mops.push_back(Point2d(x, y));
-            this->eachMonsterLevel.push_back(level);
         }
         this->mapData->SetMonstersPos(mops);
 
@@ -618,22 +623,25 @@ public:
                 readyAction cmd = allAction[i];
                 if (cmd.action == ActionMonster)
                 {
-                    cout << cmd.name << " "
-                         << cmd.agile << " "
-                         << cmd.sk->Text() << endl;
+                    cout
+                        << cmd.name << " "
+                        << cmd.agile << " "
+                        << cmd.sk->Text() << endl;
                 }
                 else if (cmd.action == ActionCard)
                 {
-                    cout << cmd.name << " "
-                         << cmd.agile << " "
-                         << cmd.s1->No() << " "
-                         << cmd.s2->No() << endl;
+                    cout
+                        << cmd.name << " "
+                        << cmd.agile << " "
+                        << cmd.s1->No() << " "
+                        << cmd.s2->No() << endl;
                 }
                 else
                 {
-                    cout << cmd.name << " "
-                         << cmd.agile << " -1"
-                         << endl;
+                    cout
+                        << cmd.name << " "
+                        << cmd.agile << " -1"
+                        << endl;
                 }
             }
 
@@ -647,25 +655,29 @@ public:
 
                 if (cmd.action == ActionMonster) // 怪物動作
                 {
+                    cmd.sk->Action(this->mapData, cmd.sk->Owner()->No());
                     if (this->debugMode)
-                        cout << cmd.name << " "
-                             << cmd.agile << " "
-                             << cmd.sk->Text() << endl;
+                        cout
+                            << cmd.name << " "
+                            << cmd.agile << " "
+                            << cmd.sk->Text() << endl;
                 }
                 else if (cmd.action == ActionCard) // 出牌
                 {
                     if (this->debugMode)
-                        cout << cmd.name << " "
-                             << cmd.agile << " "
-                             << cmd.s1->No() << " "
-                             << cmd.s2->No() << endl;
+                        cout
+                            << cmd.name << " "
+                            << cmd.agile << " "
+                            << cmd.s1->No() << " "
+                            << cmd.s2->No() << endl;
                 }
                 else // 長休
                 {
                     if (this->debugMode)
-                        cout << cmd.name << " "
-                             << cmd.agile << " -1"
-                             << endl;
+                        cout
+                            << cmd.name << " "
+                            << cmd.agile << " -1"
+                            << endl;
                 }
             }
 

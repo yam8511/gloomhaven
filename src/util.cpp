@@ -151,11 +151,11 @@ char showMapObject(MapObject x)
 // 移動類型
 enum Move
 {
-    W = 1, // 上
-    A = 2, // 左
-    S = 3, // 下
-    D = 4, // 右
-    E = 0, // 不動
+    W = 'w', // 上
+    A = 'a', // 左
+    S = 's', // 下
+    D = 'd', // 右
+    E = 'e', // 不動
 };
 
 vector<string> split(const string &str, const string &delim)

@@ -1,5 +1,7 @@
-// 角色
+class Point2d;
+class MapData;
 class Character;
-class Monster;
 class CharacterSkill;
+class Monster;
 class MonsterSkill;
+class Gloomhaven;
