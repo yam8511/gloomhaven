@@ -494,7 +494,7 @@ public:
             vector<readyAction> allAction;
             for (int i = 0; i < this->selectedPlayers.size(); i++)
             {
-                cout << "i -> " << i << ", Alias -> " << this->selectedPlayers[i]->Alias() << " | " << endl;
+                // cout << "i -> " << i << ", Alias -> " << this->selectedPlayers[i]->Alias() << " | " << endl;
                 // 如果手牌跟棄牌堆小於2，表示陣亡
                 if (this->selectedPlayers[i]->Dead())
                     deadTeam[this->selectedPlayers[i]->Alias()] = this->selectedPlayers[i];
@@ -653,7 +653,7 @@ public:
 
             /** 動作階段 **/
             cout << endl;
-            cout << "/** 動作階段 **/" << endl;
+            cout << "======== 動作階段 =========" << endl;
             for (int i = 0; i < allAction.size(); i++)
             {
                 readyAction cmd = allAction[i];
@@ -669,12 +669,12 @@ public:
                     vector<string> actions = cmd.sk->Actions();
                     for (int i = 0; i < actions.size(); i++)
                     {
-                        cout << "act " << i << " : " << actions[i] << endl;
+                        // cout << "act " << i << " : " << actions[i] << endl;
                         string act = actions[i];
                         if (act == "move") // 移動
                         {
                             i++;
-                            cout << "arrow " << i << " : " << actions[i] << endl;
+                            // cout << "arrow " << i << " : " << actions[i] << endl;
                             string arrow = actions[i];
                             this->mapData->Move(true, cmd.sk->Owner()->No(), actions[i]);
                             this->mapData->ShowMap();
@@ -806,6 +806,7 @@ public:
                             {
                                 continue;
                             }
+                            ok = true;
                         }
                     }
                     else // 長休
