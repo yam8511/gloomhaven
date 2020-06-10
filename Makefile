@@ -1,3 +1,6 @@
+build:
+	g++ -std=c++17 -o project.exe ./src/main.cpp
+
 run:
 	g++ -std=c++17 -o project.exe ./src/main.cpp
 	./project.exe character3.txt monster3.txt 0
