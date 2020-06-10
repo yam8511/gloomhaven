@@ -1,26 +1,29 @@
-/*
-*
-* Author      : appleboy
-* Date        : 2010.04.01
-* Filename    : strtok.c
-*
-*/
+#include <iostream>
+#include <string>
+using namespace std;
 
-#include "string.h"
-#include "stdlib.h"
-#include "stdio.h"
+string getInputLine()
+{
+    char buffer[512];
+    cin.getline(buffer, 512);
+    string tmp = string(buffer);
+    tmp.erase(std::remove(tmp.begin(), tmp.end(), '\r'), tmp.end());
+    tmp.erase(std::remove(tmp.begin(), tmp.end(), '\n'), tmp.end());
+    return tmp;
+}
 
 int main()
 {
-    char str[] = "00:22:33:4B:55:5A";
-    char *delim = ":";
-    char *pch;
-    printf("Splitting string \"%s\" into tokens:\n", str);
-    pch = strtok(str, delim);
-    while (pch != NULL)
+    string a = getInputLine();
+    cout << a << "what?" << endl;
+
+    if (a == "play")
     {
-        printf("%s\n", pch);
-        pch = strtok(NULL, delim);
+        cout << "OK" << endl;
+    }
+    else
+    {
+        cout << "No" << endl;
     }
 
     return 0;

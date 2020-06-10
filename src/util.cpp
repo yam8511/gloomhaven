@@ -6,6 +6,7 @@
 #include <vector>
 #include <random>
 #include "game.h"
+#include <algorithm>
 using namespace std;
 
 string getPlayerCode(int i)
@@ -227,16 +228,30 @@ void PrintAndExit(string e)
     // throw e;
 }
 
+string trimNewline(string tmp)
+{
+    tmp.erase(std::remove(tmp.begin(), tmp.end(), '\r'), tmp.end());
+    tmp.erase(std::remove(tmp.begin(), tmp.end(), '\n'), tmp.end());
+    return tmp;
+}
+
 string getInputLine()
 {
     char buffer[512];
     cin.getline(buffer, 512);
-    return string(buffer);
+    return trimNewline(string(buffer));
 }
 
 vector<string> getInputLineSplit()
 {
     char buffer[512];
     cin.getline(buffer, 512);
-    return split(buffer, " ");
+
+    vector<string> tmps = split(buffer, " ");
+    if (tmps.size() > 0)
+    {
+        tmps[tmps.size() - 1] = trimNewline(tmps[tmps.size() - 1]);
+    }
+
+    return tmps;
 }

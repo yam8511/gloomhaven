@@ -21,10 +21,7 @@ int main(int argc, char const *argv[])
     while (true)
     {
         cout << "輸入play來開始遊戲，或輸入exit來結束遊戲" << endl;
-        if (debugModel)
-            tmp = "play";
-        else
-            tmp = getInputLine();
+        tmp = getInputLine();
 
         if (tmp == "play")
         {
