@@ -493,6 +493,8 @@ public:
                 if (ss[1] != "-1" && ss[1] != "check" && ss.size() < 3)
                     continue;
 
+                ss[ss.size() - 1] = trimNewline(ss[ss.size() - 1]);
+
                 string name = ss[0];
 
                 if (deadTeam.find(name) != deadTeam.end()) // 如果玩家已經陣亡，則顯示
@@ -601,6 +603,7 @@ public:
             /** 準備階段-輸出 **/
             map<int, int> playerAgile;
             sort(allAction.begin(), allAction.end(), compareReadyAction);
+            cout << endl;
             for (int i = 0; i < allAction.size(); i++)
             {
                 readyAction cmd = allAction[i];
@@ -753,10 +756,11 @@ public:
 
                         bool ok = false;
                         char first = '\0', second = '\0';
-                        // TODO: 選擇手牌與執行動作
                         while (!ok)
                         {
                             string input = getInputLine();
+                            input = trimNewline(input);
+                            cout << "動作 -> " << input << endl;
                             if (input == "check")
                             {
                                 for (int j = 0; j < this->selectedPlayers.size(); j++)
@@ -796,6 +800,8 @@ public:
                                 second = 'd';
                             else
                                 second = 'u';
+
+                            // TODO: 選擇手牌與執行動作
                         }
                     }
                     else // 長休

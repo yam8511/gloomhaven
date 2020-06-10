@@ -1,0 +1,13 @@
+play
+2
+brute 0 1 2 3 4 5
+brute 0 1 2 3 4 5
+map1.txt
+sa
+e
+sw
+e
+A 0 3
+B 0 3
+3u
+3u
